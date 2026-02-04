@@ -55,7 +55,7 @@ const transactionSchema = z.object({
     .max(VALIDATION.MAX_EXCHANGE_RATE, 'Exchange rate is too large'),
   fees: z.number().min(0).optional(),
   notes: z.string().max(VALIDATION.MAX_NOTES_LENGTH).optional(),
-  transaction_date: z.date(),
+  transaction_date: z.string().min(1, 'Date is required'),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
@@ -107,7 +107,7 @@ export function AddTransactionModal({
       exchange_rate_to_pln: 1,
       fees: 0,
       notes: '',
-      transaction_date: new Date(),
+      transaction_date: format(new Date(), 'yyyy-MM-dd'),
     },
   });
 
@@ -194,7 +194,12 @@ export function AddTransactionModal({
   const handleFormSubmit = async (data: TransactionFormData) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(data as AddTransactionForm);
+      // Convert transaction_date string to Date object
+      const formData: AddTransactionForm = {
+        ...data,
+        transaction_date: new Date(data.transaction_date),
+      };
+      await onSubmit(formData);
       reset();
       setSearchQuery('');
       setSelectedAsset(null);
@@ -267,7 +272,6 @@ export function AddTransactionModal({
             <Input
               id="date"
               type="date"
-              defaultValue={format(new Date(), 'yyyy-MM-dd')}
               {...register('transaction_date')}
               className="bg-white/5 border-white/10 text-white"
             />
