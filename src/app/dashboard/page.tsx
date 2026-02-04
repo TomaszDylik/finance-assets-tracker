@@ -27,6 +27,7 @@ import { getTransactions, addTransaction, deleteAllTransactionsForTicker } from 
 import { getPortfolioSnapshots, savePortfolioSnapshot } from "@/actions/portfolio";
 import { getMultipleQuotes, getMultipleExchangeRates } from "@/lib/yahoo";
 import { calculateHoldings, updateHoldingWithLiveData, calculatePortfolioSummary } from "@/lib/calculations";
+import { clearPortfolioCache } from "@/hooks";
 import type { Holding, Currency } from "@/types";
 
 export default function DashboardPage() {
@@ -146,6 +147,7 @@ export default function DashboardPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["portfolio-snapshots"] });
+      clearPortfolioCache(); // Clear chart cache to force recalculation
       setIsAddModalOpen(false);
       toast.success("Transaction added successfully");
     },
@@ -160,6 +162,7 @@ export default function DashboardPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["portfolio-snapshots"] });
+      clearPortfolioCache(); // Clear chart cache to force recalculation
       toast.success("All transactions deleted for this asset");
     },
     onError: (error) => {

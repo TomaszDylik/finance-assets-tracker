@@ -5,7 +5,7 @@
 // Shows Invested Capital vs Market Value with gap filling
 // ===========================================
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   ResponsiveContainer,
@@ -102,6 +102,7 @@ export function PortfolioHistoryChart({
 }: PortfolioHistoryChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('1M');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastTransactionsLength, setLastTransactionsLength] = useState(transactions.length);
 
   // Wrapper for fetching historical prices
   const fetchPrices = useCallback(async (
@@ -117,6 +118,15 @@ export function PortfolioHistoryChart({
     transactions,
     fetchPrices
   );
+
+  // Auto-refresh when transactions change (added or deleted)
+  useEffect(() => {
+    if (transactions.length !== lastTransactionsLength) {
+      clearCache();
+      refresh();
+      setLastTransactionsLength(transactions.length);
+    }
+  }, [transactions.length, lastTransactionsLength, clearCache, refresh]);
 
   // Handle refresh button click
   const handleRefresh = async () => {
