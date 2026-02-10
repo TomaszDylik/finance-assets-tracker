@@ -1,9 +1,5 @@
 'use client';
 
-// ===========================================
-// Auth Context Provider
-// ===========================================
-
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
@@ -30,23 +26,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const supabase = useMemo(() => createClient(), []);
 
-  // Fetch user profile from database
   const fetchProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching profile:', error);
       return null;
     }
 
+    if (!data) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return null;
+
+      const { data: created, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: authUser.email || '',
+          full_name: authUser.user_metadata?.full_name || '',
+          base_currency: 'PLN',
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creating profile:', createError);
+        return null;
+      }
+
+      return created as Profile;
+    }
+
     return data as Profile;
   }, [supabase]);
 
-  // Refresh profile data
   const refreshProfile = useCallback(async () => {
     if (user) {
       const profileData = await fetchProfile(user.id);
@@ -54,16 +71,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchProfile]);
 
-  // Initialize auth state
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        
-        if (initialSession) {
-          setSession(initialSession);
-          setUser(initialSession.user);
-          const profileData = await fetchProfile(initialSession.user.id);
+        const { data: { session: initial } } = await supabase.auth.getSession();
+        if (initial) {
+          setSession(initial);
+          setUser(initial.user);
+          const profileData = await fetchProfile(initial.user.id);
           setProfile(profileData);
         }
       } catch (error) {
@@ -75,7 +90,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
         setSession(newSession);
@@ -89,40 +103,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setIsLoading(false);
-      }
+      },
     );
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => { subscription.unsubscribe(); };
   }, [supabase.auth, fetchProfile]);
 
-  // Sign in with email and password
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error as Error | null };
   };
 
-  // Sign up with email and password
   const signUp = async (email: string, password: string, fullName?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
+      options: { data: { full_name: fullName } },
     });
-
     return { error: error as Error | null };
   };
 
-  // Sign out
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -131,18 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        profile,
-        isLoading,
-        signIn,
-        signUp,
-        signOut,
-        refreshProfile,
-      }}
-    >
+    <AuthContext.Provider value={{ user, session, profile, isLoading, signIn, signUp, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

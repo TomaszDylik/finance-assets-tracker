@@ -1,32 +1,15 @@
-// ===========================================
-// Portfolio Calculation Utilities
-// ===========================================
-// Contains all the math logic for portfolio calculations
-// ===========================================
-
 import type { Transaction, Holding, Currency } from '@/types';
 
-// ===========================================
-// CORE CALCULATION: Transform Transactions to Holdings
-// ===========================================
-
 /**
- * Groups transactions by ticker and calculates aggregated holdings
- * This is the "brain" of the portfolio tracker
- * 
- * @param transactions - Array of all user transactions
- * @returns Array of Holdings with calculated values
+ * Groups transactions by ticker and calculates aggregated holdings.
+ * Only returns holdings with positive quantity (not fully sold).
  */
 export function calculateHoldings(transactions: Transaction[]): Holding[] {
-  // Group transactions by ticker
-  const transactionsByTicker = groupByTicker(transactions);
-  
+  const grouped = groupByTicker(transactions);
   const holdings: Holding[] = [];
 
-  for (const [ticker, tickerTransactions] of transactionsByTicker) {
+  for (const [ticker, tickerTransactions] of grouped) {
     const holding = calculateSingleHolding(ticker, tickerTransactions);
-    
-    // Only include holdings with positive quantity (not fully sold)
     if (holding && holding.total_quantity > 0) {
       holdings.push(holding);
     }
@@ -35,125 +18,56 @@ export function calculateHoldings(transactions: Transaction[]): Holding[] {
   return holdings;
 }
 
-/**
- * Calculate a single holding from its transactions
- * Uses FIFO-like averaging for simplicity
- */
-function calculateSingleHolding(
-  ticker: string,
-  transactions: Transaction[]
-): Holding | null {
+function calculateSingleHolding(ticker: string, transactions: Transaction[]): Holding | null {
   if (transactions.length === 0) return null;
 
-  // Separate BUY and SELL transactions
-  const buyTransactions = transactions.filter((t) => t.transaction_type === 'BUY');
-  const sellTransactions = transactions.filter((t) => t.transaction_type === 'SELL');
+  const buys = transactions.filter((t) => t.transaction_type === 'BUY');
+  const sells = transactions.filter((t) => t.transaction_type === 'SELL');
 
-  // Calculate total bought and sold quantities
-  const totalBought = buyTransactions.reduce((sum, t) => sum + t.quantity, 0);
-  const totalSold = sellTransactions.reduce((sum, t) => sum + t.quantity, 0);
+  const totalBought = buys.reduce((sum, t) => sum + t.quantity, 0);
+  const totalSold = sells.reduce((sum, t) => sum + t.quantity, 0);
   const currentQuantity = totalBought - totalSold;
 
-  // If fully sold, return null (will be in closed positions)
   if (currentQuantity <= 0) return null;
 
-  // ===========================================
-  // WEIGHTED AVERAGE BUY PRICE CALCULATION
-  // ===========================================
-  // Formula: Sum(price_i * quantity_i) / Sum(quantity_i)
-  // 
-  // Example:
-  // Buy 10 shares @ $100 = $1000
-  // Buy 5 shares @ $120 = $600
-  // Total: 15 shares, $1600
-  // Avg Price = $1600 / 15 = $106.67
-  // ===========================================
-
-  let totalCostOriginal = 0; // In original currency
-  let totalCostPLN = 0;      // In PLN
+  let totalCostOriginal = 0;
+  let totalCostPLN = 0;
   let weightedExchangeRateSum = 0;
 
-  for (const t of buyTransactions) {
-    const transactionCostOriginal = t.quantity * t.price_per_share;
-    const transactionCostPLN = transactionCostOriginal * t.exchange_rate_to_pln;
-    
-    totalCostOriginal += transactionCostOriginal;
-    totalCostPLN += transactionCostPLN;
-    
-    // Weight the exchange rate by quantity
+  for (const t of buys) {
+    const costOriginal = t.quantity * t.price_per_share;
+    totalCostOriginal += costOriginal;
+    totalCostPLN += costOriginal * t.exchange_rate_to_pln;
     weightedExchangeRateSum += t.exchange_rate_to_pln * t.quantity;
   }
 
-  // Calculate averages
   const avgBuyPrice = totalCostOriginal / totalBought;
   const avgExchangeRate = weightedExchangeRateSum / totalBought;
-
-  // Adjust for sold shares (proportional reduction of cost basis)
-  // If 30% of shares sold, reduce cost basis by 30%
   const costBasisRatio = currentQuantity / totalBought;
-  const adjustedInvestedPLN = totalCostPLN * costBasisRatio;
-
-  // Get metadata from first transaction
-  const firstTransaction = transactions[0];
 
   return {
     ticker,
-    asset_name: firstTransaction.asset_name || ticker,
-    asset_type: firstTransaction.asset_type,
+    asset_name: transactions[0].asset_name || ticker,
+    asset_type: transactions[0].asset_type,
     total_quantity: currentQuantity,
     avg_buy_price: avgBuyPrice,
-    original_currency: firstTransaction.currency,
+    original_currency: transactions[0].currency,
     avg_exchange_rate: avgExchangeRate,
-    total_invested_pln: adjustedInvestedPLN,
-    transactions: transactions.sort(
-      (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
+    total_invested_pln: totalCostPLN * costBasisRatio,
+    transactions: [...transactions].sort(
+      (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime(),
     ),
   };
 }
 
-// ===========================================
-// LIVE VALUE CALCULATIONS
-// ===========================================
-
-/**
- * Update holding with live price data
- * 
- * @param holding - The holding to update
- * @param currentPrice - Current market price in original currency
- * @param currentExchangeRate - Current exchange rate to PLN
- * @param dayChangePercent - Day change percentage from market data
- */
+/** Update a holding with live market price data. */
 export function updateHoldingWithLiveData(
   holding: Holding,
   currentPrice: number,
   currentExchangeRate: number,
-  dayChangePercent: number
+  dayChangePercent: number,
 ): Holding {
-  // ===========================================
-  // CURRENT VALUE CALCULATION
-  // ===========================================
-  // Formula: quantity * current_price * current_exchange_rate
-  // 
-  // Example:
-  // Holding: 15 shares of AAPL
-  // Current Price: $180 USD
-  // Current USD/PLN: 4.20
-  // Current Value = 15 * 180 * 4.20 = 11,340 PLN
-  // ===========================================
-
   const currentValuePLN = holding.total_quantity * currentPrice * currentExchangeRate;
-
-  // ===========================================
-  // TOTAL RETURN CALCULATION
-  // ===========================================
-  // Formula: current_value - invested_amount
-  // 
-  // Example:
-  // Current Value: 11,340 PLN
-  // Invested: 6,720 PLN (15 * 106.67 * 4.20)
-  // Total Return = 11,340 - 6,720 = 4,620 PLN (+68.75%)
-  // ===========================================
-
   const totalReturnPLN = currentValuePLN - holding.total_invested_pln;
   const totalReturnPercent = (totalReturnPLN / holding.total_invested_pln) * 100;
 
@@ -169,52 +83,22 @@ export function updateHoldingWithLiveData(
   };
 }
 
-// ===========================================
-// REALIZED PROFIT CALCULATION (for SELL transactions)
-// ===========================================
-
 /**
- * Calculate realized profit/loss when selling
- * 
- * @param avgBuyPrice - Average buy price in original currency
- * @param avgBuyExchangeRate - Weighted average exchange rate at purchase
- * @param sellPrice - Sell price in original currency
- * @param sellExchangeRate - Exchange rate at time of sale
- * @param quantity - Quantity sold
- * @returns Realized profit/loss in PLN
+ * Calculate realized profit/loss in PLN when selling shares.
+ *
+ * profit = (sellPrice × sellRate − avgBuyPrice × avgBuyRate) × quantity
  */
 export function calculateRealizedProfit(
   avgBuyPrice: number,
   avgBuyExchangeRate: number,
   sellPrice: number,
   sellExchangeRate: number,
-  quantity: number
+  quantity: number,
 ): number {
-  // ===========================================
-  // REALIZED PROFIT FORMULA
-  // ===========================================
-  // Cost Basis (PLN) = quantity * avg_buy_price * avg_exchange_rate
-  // Sale Value (PLN) = quantity * sell_price * sell_exchange_rate
-  // Realized Profit = Sale Value - Cost Basis
-  // 
-  // Example:
-  // Selling 5 AAPL shares
-  // Avg Buy: $106.67 @ 4.10 PLN/USD = 437.35 PLN/share
-  // Sell: $180 @ 4.20 PLN/USD = 756 PLN/share
-  // Cost Basis: 5 * 437.35 = 2,186.75 PLN
-  // Sale Value: 5 * 756 = 3,780 PLN
-  // Realized Profit: 3,780 - 2,186.75 = 1,593.25 PLN
-  // ===========================================
-
   const costBasisPLN = quantity * avgBuyPrice * avgBuyExchangeRate;
   const saleValuePLN = quantity * sellPrice * sellExchangeRate;
-  
   return saleValuePLN - costBasisPLN;
 }
-
-// ===========================================
-// PORTFOLIO SUMMARY CALCULATIONS
-// ===========================================
 
 export interface PortfolioSummary {
   totalValuePLN: number;
@@ -224,46 +108,47 @@ export interface PortfolioSummary {
   dayChangePLN: number;
   dayChangePercent: number;
   assetCount: number;
+  realizedProfitPLN: number;
+  unrealizedReturnPLN: number;
 }
 
-/**
- * Calculate overall portfolio summary from holdings
- */
-export function calculatePortfolioSummary(holdings: Holding[]): PortfolioSummary {
+/** Calculate overall portfolio summary from open holdings and closed positions. */
+export function calculatePortfolioSummary(
+  holdings: Holding[],
+  closedPositions: Array<{ realized_profit_pln: number }> = [],
+): PortfolioSummary {
   let totalValuePLN = 0;
   let totalInvestedPLN = 0;
   let previousDayValuePLN = 0;
 
   for (const holding of holdings) {
     totalInvestedPLN += holding.total_invested_pln;
-    
+
     if (holding.current_value_pln !== undefined) {
       totalValuePLN += holding.current_value_pln;
-      
-      // Calculate previous day value for day change
-      // Previous value = current value / (1 + day_change_percent/100)
+
       if (holding.day_change_percent !== undefined) {
-        const prevValue = holding.current_value_pln / (1 + holding.day_change_percent / 100);
-        previousDayValuePLN += prevValue;
+        previousDayValuePLN += holding.current_value_pln / (1 + holding.day_change_percent / 100);
       } else {
         previousDayValuePLN += holding.current_value_pln;
       }
     } else {
-      // If no live data, use invested as current value
       totalValuePLN += holding.total_invested_pln;
       previousDayValuePLN += holding.total_invested_pln;
     }
   }
 
-  const totalReturnPLN = totalValuePLN - totalInvestedPLN;
-  const totalReturnPercent = totalInvestedPLN > 0 
-    ? (totalReturnPLN / totalInvestedPLN) * 100 
-    : 0;
-  
+  const unrealizedReturnPLN = totalValuePLN - totalInvestedPLN;
   const dayChangePLN = totalValuePLN - previousDayValuePLN;
-  const dayChangePercent = previousDayValuePLN > 0 
-    ? (dayChangePLN / previousDayValuePLN) * 100 
-    : 0;
+  const dayChangePercent = previousDayValuePLN > 0 ? (dayChangePLN / previousDayValuePLN) * 100 : 0;
+
+  const realizedProfitPLN = closedPositions.reduce(
+    (sum, p) => sum + (p.realized_profit_pln || 0),
+    0,
+  );
+
+  const totalReturnPLN = unrealizedReturnPLN + realizedProfitPLN;
+  const totalReturnPercent = totalInvestedPLN > 0 ? (totalReturnPLN / totalInvestedPLN) * 100 : 0;
 
   return {
     totalValuePLN,
@@ -273,61 +158,41 @@ export function calculatePortfolioSummary(holdings: Holding[]): PortfolioSummary
     dayChangePLN,
     dayChangePercent,
     assetCount: holdings.length,
+    realizedProfitPLN,
+    unrealizedReturnPLN,
   };
 }
 
-// ===========================================
-// HELPER FUNCTIONS
-// ===========================================
-
-/**
- * Group transactions by ticker symbol
- */
 function groupByTicker(transactions: Transaction[]): Map<string, Transaction[]> {
   const grouped = new Map<string, Transaction[]>();
-
-  for (const transaction of transactions) {
-    const existing = grouped.get(transaction.ticker) || [];
-    existing.push(transaction);
-    grouped.set(transaction.ticker, existing);
+  for (const tx of transactions) {
+    const existing = grouped.get(tx.ticker) || [];
+    existing.push(tx);
+    grouped.set(tx.ticker, existing);
   }
-
   return grouped;
 }
 
-/**
- * Format currency value for display
- */
 export function formatCurrency(
   value: number,
   currency: Currency = 'PLN',
-  options: Intl.NumberFormatOptions = {}
+  options: Intl.NumberFormatOptions = {},
 ): string {
-  const formatter = new Intl.NumberFormat('pl-PL', {
+  return new Intl.NumberFormat('pl-PL', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     ...options,
-  });
-
-  return formatter.format(value);
+  }).format(value);
 }
 
-/**
- * Format percentage for display
- */
-export function formatPercentage(value: number, decimals: number = 2): string {
+export function formatPercentage(value: number, decimals = 2): string {
   const sign = value >= 0 ? '+' : '';
   return `${sign}${value.toFixed(decimals)}%`;
 }
 
-/**
- * Format quantity (supports fractional shares)
- */
 export function formatQuantity(value: number): string {
-  if (Number.isInteger(value)) {
-    return value.toString();
-  }
+  if (Number.isInteger(value)) return value.toString();
   return value.toFixed(8).replace(/\.?0+$/, '');
 }

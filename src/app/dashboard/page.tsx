@@ -10,6 +10,7 @@ import {
   TrendingUp,
   AlertCircle,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,15 +21,18 @@ import { PortfolioSummary } from "@/components/portfolio-summary";
 import { PortfolioHistoryChart } from "@/components/portfolio-history-chart";
 import { AssetList } from "@/components/asset-list";
 import { AddTransactionModal } from "@/components/add-transaction-modal";
+import { EditTransactionModal } from "@/components/edit-transaction-modal";
+import { ClosedPositionsList } from "@/components/closed-positions-list";
+import { TransactionHistory } from "@/components/transaction-history";
 import { RefreshButton } from "@/components/refresh-button";
 
 import { useAuth } from "@/providers/auth-provider";
-import { getTransactions, addTransaction, deleteAllTransactionsForTicker } from "@/actions/transactions";
+import { getTransactions, addTransaction, deleteAllTransactionsForTicker, deleteAllTransactions, deleteAllClosedPositions, updateTransaction, deleteTransaction, getClosedPositions } from "@/actions/transactions";
 import { getPortfolioSnapshots, savePortfolioSnapshot } from "@/actions/portfolio";
 import { getMultipleQuotes, getMultipleExchangeRates } from "@/lib/yahoo";
 import { calculateHoldings, updateHoldingWithLiveData, calculatePortfolioSummary } from "@/lib/calculations";
 import { clearPortfolioCache } from "@/hooks";
-import type { Holding, Currency } from "@/types";
+import type { Holding, Currency, Transaction } from "@/types";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -36,6 +40,7 @@ export default function DashboardPage() {
   const queryClient = useQueryClient();
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editTransaction, setEditTransaction] = useState<Transaction | null>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -49,6 +54,7 @@ export default function DashboardPage() {
     data: transactions = [],
     isLoading: transactionsLoading,
     error: transactionsError,
+    refetch: refetchTransactions,
   } = useQuery({
     queryKey: ["transactions"],
     queryFn: getTransactions,
@@ -60,9 +66,22 @@ export default function DashboardPage() {
   const {
     data: snapshots = [],
     isLoading: snapshotsLoading,
+    refetch: refetchSnapshots,
   } = useQuery({
     queryKey: ["portfolio-snapshots"],
     queryFn: getPortfolioSnapshots,
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch closed positions for realized P/L section
+  const {
+    data: closedPositions = [],
+    isLoading: closedPositionsLoading,
+    refetch: refetchClosedPositions,
+  } = useQuery({
+    queryKey: ["closed-positions"],
+    queryFn: getClosedPositions,
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
   });
@@ -112,7 +131,7 @@ export default function DashboardPage() {
   });
 
   // Calculate portfolio summary from holdings
-  const portfolioSummary = calculatePortfolioSummary(holdingsWithLiveData);
+  const portfolioSummary = calculatePortfolioSummary(holdingsWithLiveData, closedPositions);
 
   // Auto-save portfolio snapshot once per day when data is available
   useEffect(() => {
@@ -144,10 +163,13 @@ export default function DashboardPage() {
   // Add transaction mutation
   const addTransactionMutation = useMutation({
     mutationFn: addTransaction,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["portfolio-snapshots"] });
-      clearPortfolioCache(); // Clear chart cache to force recalculation
+    onSuccess: async () => {
+      await Promise.all([
+        refetchTransactions(),
+        refetchSnapshots(),
+        refetchClosedPositions(),
+      ]);
+      clearPortfolioCache();
       setIsAddModalOpen(false);
       toast.success("Transaction added successfully");
     },
@@ -159,16 +181,100 @@ export default function DashboardPage() {
   // Delete all transactions for ticker mutation
   const deleteAllMutation = useMutation({
     mutationFn: (ticker: string) => deleteAllTransactionsForTicker(ticker),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["portfolio-snapshots"] });
-      clearPortfolioCache(); // Clear chart cache to force recalculation
+    onSuccess: async () => {
+      await Promise.all([
+        refetchTransactions(),
+        refetchSnapshots(),
+        refetchClosedPositions(),
+      ]);
+      clearPortfolioCache();
       toast.success("All transactions deleted for this asset");
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Failed to delete transactions");
     },
   });
+
+  // Delete ALL transactions mutation (clear portfolio)
+  const deleteAllPortfolioMutation = useMutation({
+    mutationFn: deleteAllTransactions,
+    onSuccess: async () => {
+      await Promise.all([
+        refetchTransactions(),
+        refetchSnapshots(),
+        refetchClosedPositions(),
+      ]);
+      clearPortfolioCache();
+      toast.success("Portfolio cleared — all transactions deleted");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to delete all transactions");
+    },
+  });
+
+  // Update transaction mutation
+  const updateTransactionMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateTransaction>[1] }) =>
+      updateTransaction(id, data),
+    onSuccess: async () => {
+      await Promise.all([
+        refetchTransactions(),
+        refetchSnapshots(),
+        refetchClosedPositions(),
+      ]);
+      clearPortfolioCache();
+      setEditTransaction(null);
+      toast.success("Transaction updated successfully");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to update transaction");
+    },
+  });
+
+  // Delete single transaction mutation
+  const deleteTransactionMutation = useMutation({
+    mutationFn: deleteTransaction,
+    onSuccess: async () => {
+      await Promise.all([
+        refetchTransactions(),
+        refetchSnapshots(),
+        refetchClosedPositions(),
+      ]);
+      clearPortfolioCache();
+      toast.success("Transaction deleted successfully");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to delete transaction");
+    },
+  });
+
+  // Delete ALL closed positions mutation
+  const deleteClosedPositionsMutation = useMutation({
+    mutationFn: deleteAllClosedPositions,
+    onSuccess: async () => {
+      await refetchClosedPositions();
+      toast.success("All closed positions deleted permanently");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to delete closed positions");
+    },
+  });
+
+  // Handle edit transaction
+  const handleEditTransaction = (holding: Holding, transactionId: string) => {
+    const tx = holding.transactions.find(t => t.id === transactionId);
+    if (tx) {
+      setEditTransaction(tx);
+    }
+  };
+
+  // Handle delete single transaction
+  const handleDeleteTransaction = (holding: Holding, transactionId: string) => {
+    const tx = holding.transactions.find(t => t.id === transactionId);
+    if (tx && window.confirm(`Delete this ${tx.transaction_type} transaction for ${tx.ticker}?\n${tx.quantity} shares @ ${tx.currency} ${tx.price_per_share}\nThis cannot be undone.`)) {
+      deleteTransactionMutation.mutate(transactionId);
+    }
+  };
 
   // Refresh handler
   const handleRefresh = async () => {
@@ -222,6 +328,25 @@ export default function DashboardPage() {
               >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Add Transaction</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Delete all transactions"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to DELETE ALL transactions and clear your entire portfolio? This cannot be undone.')) {
+                    deleteAllPortfolioMutation.mutate();
+                  }
+                }}
+                className="text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10"
+                disabled={deleteAllPortfolioMutation.isPending}
+              >
+                {deleteAllPortfolioMutation.isPending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-5 w-5" />
+                )}
               </Button>
 
               <Button
@@ -305,13 +430,15 @@ export default function DashboardPage() {
                 Start building your portfolio by adding your first transaction.
                 Track stocks, ETFs, and crypto with real-time data.
               </p>
-              <Button
-                onClick={() => setIsAddModalOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
-              >
-                <Plus className="h-5 w-5" />
-                Add Your First Transaction
-              </Button>
+              <div className="flex gap-3 justify-center flex-wrap">
+                <Button
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  Add Your First Transaction
+                </Button>
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -344,8 +471,34 @@ export default function DashboardPage() {
                   holdings={holdingsWithLiveData}
                   isLoading={quotesLoading || ratesLoading}
                   onDelete={(ticker: string) => deleteAllMutation.mutate(ticker)}
+                  onEdit={handleEditTransaction}
+                  onDeleteTransaction={handleDeleteTransaction}
                 />
               </div>
+
+              {/* Closed Positions (Realized P/L) */}
+              <ClosedPositionsList 
+                positions={closedPositions}
+                isLoading={closedPositionsLoading}
+                onDeleteAll={() => {
+                  if (window.confirm('Are you sure you want to DELETE ALL closed positions? This will permanently remove all realized P/L history. This cannot be undone.')) {
+                    deleteClosedPositionsMutation.mutate();
+                  }
+                }}
+                isDeleting={deleteClosedPositionsMutation.isPending}
+              />
+
+              {/* Full Transaction History */}
+              <TransactionHistory
+                transactions={transactions}
+                onEdit={(tx) => setEditTransaction(tx)}
+                onDelete={(transactionId) => {
+                  const tx = transactions.find(t => t.id === transactionId);
+                  if (tx && window.confirm(`Delete this ${tx.transaction_type} transaction for ${tx.ticker}?\n${tx.quantity} shares @ ${tx.currency} ${tx.price_per_share}\nThis cannot be undone.`)) {
+                    deleteTransactionMutation.mutate(transactionId);
+                  }
+                }}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -356,6 +509,21 @@ export default function DashboardPage() {
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={async (data) => { addTransactionMutation.mutate(data); }}
+      />
+
+      {/* Edit Transaction Modal */}
+      <EditTransactionModal
+        open={!!editTransaction}
+        onClose={() => setEditTransaction(null)}
+        onSave={async (id, data) => {
+          updateTransactionMutation.mutate({ 
+            id, 
+            data: {
+              ...data,
+              transaction_date: data.transaction_date ? new Date(data.transaction_date) : undefined,
+            }
+          });        }}
+        transaction={editTransaction}
       />
     </div>
   );
