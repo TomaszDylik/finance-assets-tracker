@@ -1,154 +1,87 @@
-# FinTrack - Futuristic Stock Portfolio Tracker
+# FinTrack — Portfolio Tracker
 
-A modern, dark-themed stock portfolio tracker built with Next.js 15, TypeScript, Tailwind CSS, and Supabase. Track your investments across stocks, ETFs, and crypto with real-time data from Yahoo Finance.
+A dark-themed stock portfolio tracker built with **Next.js 16**, **TypeScript**, **Tailwind CSS 4**, and **Supabase**. Track investments across stocks, ETFs, and crypto with real-time data from Yahoo Finance.
 
-![FinTrack](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?style=for-the-badge&logo=tailwindcss)
+## Features
 
----
+- **Real-time prices** — Live quotes via Yahoo Finance API
+- **Multi-currency** — 28 currencies with automatic PLN conversion
+- **Performance charts** — Interactive area charts with time-range filters
+- **Transaction management** — Add, edit, delete individual transactions
+- **Closed positions** — Realized P/L tracking for sold assets
+- **Price anomaly detection** — Automatic GBX/ZAC/ILA sub-unit correction
+- **Row Level Security** — Users see only their own data
+- **Responsive design** — Card view on mobile, table view on desktop
 
-## 🇵🇱 SZYBKI START (po polsku)
+## Tech Stack
 
-### ⚡ 3 proste kroki:
+| Layer      | Technology                              |
+|------------|-----------------------------------------|
+| Framework  | Next.js 16 (App Router, Turbopack)      |
+| Language   | TypeScript 5                            |
+| Styling    | Tailwind CSS 4, Shadcn UI              |
+| Database   | Supabase (PostgreSQL + Auth + RLS)      |
+| Data       | Yahoo Finance via `yahoo-finance2`      |
+| State      | TanStack React Query                    |
+| Charts     | Recharts                                |
+| Animation  | Framer Motion                           |
 
-#### 1. **Supabase** (https://supabase.com)
-- Utwórz nowy projekt
-- **WAŻNE:** Authentication → Providers → Email → **WYŁĄCZ "Confirm email"** ✅
-- SQL Editor → Wklej cały `supabase/schema.sql` → Run
+## Quick Start
 
-#### 2. **Dodaj credentials** do `.env.local`:
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://twoj-projekt.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=twoj-anon-key
-```
-*(Znajdziesz w: Project Settings → API)*
+### 1. Set up Supabase
 
-#### 3. **Uruchom**:
-```bash
-npm install
-npm run dev
-```
+1. Create a project at [supabase.com](https://supabase.com)
+2. Disable email confirmation: **Authentication → Providers → Email → Confirm email: OFF**
+3. Run `supabase/setup.sql` in the **SQL Editor**
 
-Otwórz http://localhost:3000 → Kliknij "Get Started" → Zarejestruj się!
-
----
-
-### ❓ Problemy?
-
-#### ❌ "Policy already exists"
-**Rozwiązanie:** `schema.sql` jest naprawiony - uruchom go ponownie (ma `DROP IF EXISTS`)
-
-#### ❌ "Email not confirmed"
-**Rozwiązanie:** Wyłącz weryfikację email w Supabase (krok 1 wyżej)
-
-#### ❌ Nie mogę potwierdzić email
-**Rozwiązanie A:** Wyłącz weryfikację email (zalecane dla dev)  
-**Rozwiązanie B:** Utwórz użytkownika testowego w Supabase → Authentication → Users → Add user → ✅ "Auto Confirm User"
-
-📖 **Więcej:** Zobacz `QUICK_START.md` lub `SETUP_GUIDE.md`
-
----
-
-## ✨ Features
-
-- 📊 **Real-time Portfolio Tracking** - Live stock prices from Yahoo Finance
-- 💹 **Multi-Currency Support** - Track assets in USD, EUR, GBP, CHF, JPY, CZK with automatic PLN conversion
-- 📈 **Performance Charts** - Interactive area charts with time range filters
-- 🔄 **Smart Refresh** - 30-minute cooldown to prevent API abuse
-- 🌙 **Dark Mode** - Beautiful glassmorphism design on #050505 background
-- 📱 **Mobile-First** - Card view on mobile, table view on desktop
-- 🔐 **Secure Auth** - Supabase authentication with Row Level Security
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Supabase account
-
-### 1. Clone and Install
-
-```bash
-git clone <your-repo-url>
-cd finance-assets-tracker
-npm install
-```
-
-### 2. Set up Supabase
-
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** and run the schema from `supabase/schema.sql`
-3. Copy your project URL and anon key from **Settings > API**
-
-### 3. Configure Environment
+### 2. Configure environment
 
 ```bash
 cp .env.local.example .env.local
 ```
 
 Edit `.env.local`:
+
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-### 4. Run Development Server
+Find credentials in **Project Settings → API**.
+
+### 3. Install and run
 
 ```bash
+npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000), register, and start tracking.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── page.tsx           # Landing page
-│   ├── login/             # Login page
-│   ├── register/          # Register page
-│   └── dashboard/         # Main dashboard
-├── components/            # React components
-│   ├── ui/               # Shadcn UI components
-│   ├── add-transaction-modal.tsx
-│   ├── asset-card.tsx    # Mobile card view
-│   ├── asset-table.tsx   # Desktop table view
-│   ├── asset-list.tsx    # Wrapper with filters
-│   ├── portfolio-chart.tsx
-│   ├── portfolio-summary.tsx
-│   └── refresh-button.tsx
-├── lib/                   # Utilities
-│   ├── supabase/         # Supabase clients
-│   ├── yahoo.ts          # Yahoo Finance API
-│   ├── calculations.ts   # Portfolio math
-│   └── constants.ts      # Configuration
-├── actions/              # Server actions
-├── hooks/                # Custom React hooks
-├── providers/            # Context providers
-└── types/                # TypeScript definitions
+├── actions/           Server actions (transactions, portfolio, search)
+├── app/               Next.js App Router pages
+│   ├── dashboard/     Main dashboard
+│   ├── login/         Authentication
+│   └── register/
+├── components/        React components
+│   └── ui/            Shadcn UI primitives
+├── hooks/             Custom React hooks
+├── lib/               Utilities
+│   ├── supabase/      Supabase client/server/middleware
+│   ├── calculations.ts
+│   ├── constants.ts
+│   ├── price-multiplier.ts
+│   └── yahoo.ts
+├── providers/         Context providers (auth, query)
+├── types/             TypeScript type definitions
+└── proxy.ts           Auth session management
 ```
 
-## 🎨 Design System
+## License
 
-| Color       | Hex       | Usage               |
-|-------------|-----------|---------------------|
-| Background  | `#050505` | Main background     |
-| Profit      | `#10b981` | Emerald (positive)  |
-| Loss        | `#f43f5e` | Rose (negative)     |
-| Glass       | 3% white  | Card backgrounds    |
-
-## 📝 License
-
-MIT License - see LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) - React framework
-- [Shadcn UI](https://ui.shadcn.com/) - UI components
-- [Supabase](https://supabase.com/) - Backend as a Service
-- [Yahoo Finance](https://finance.yahoo.com/) - Market data
-- [TanStack Query](https://tanstack.com/query) - Data fetching
+MIT
 
