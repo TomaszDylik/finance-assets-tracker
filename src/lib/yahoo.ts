@@ -185,3 +185,12 @@ export async function getMultipleHistoricalPrices(
 
   return historicalMap;
 }
+
+/** Fetch daily closing prices for a benchmark index (default: S&P 500). */
+export async function getBenchmarkHistory(
+  startDate: Date,
+  endDate: Date = new Date(),
+  ticker = '^GSPC',
+): Promise<Array<{ date: string; price: number }>> {
+  return getHistoricalPrices(ticker, startDate, endDate);
+}

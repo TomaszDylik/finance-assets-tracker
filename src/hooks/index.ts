@@ -77,3 +77,5 @@ export function formatTimeRemaining(seconds: number): string {
 
 export { usePortfolioHistory, clearPortfolioCache } from './use-portfolio-history';
 export type { PortfolioDataPoint } from './use-portfolio-history';
+export { useBenchmarkData, clearBenchmarkCache } from './use-benchmark-data';
+export type { BenchmarkDataPoint } from './use-benchmark-data';
