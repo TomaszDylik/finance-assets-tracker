@@ -28,6 +28,7 @@ import { TransactionHistory } from "@/components/transaction-history";
 import { RefreshButton } from "@/components/refresh-button";
 import { OnboardingWizard, hasSeenOnboarding } from "@/components/onboarding-wizard";
 import { EmptyState } from "@/components/empty-state";
+import { UserManualModal } from "@/components/user-manual-modal";
 
 import { useAuth } from "@/providers/auth-provider";
 import { getTransactions, addTransaction, deleteAllTransactionsForTicker, deleteAllTransactions, deleteAllClosedPositions, updateTransaction, deleteTransaction, getClosedPositions } from "@/actions/transactions";
@@ -45,6 +46,7 @@ export default function DashboardPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editTransaction, setEditTransaction] = useState<Transaction | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showManual, setShowManual] = useState(false);
 
   useEffect(() => {
     if (!hasSeenOnboarding()) {
@@ -347,8 +349,8 @@ export default function DashboardPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                title="Help & Onboarding"
-                onClick={() => setShowOnboarding(true)}
+                title="User Guide"
+                onClick={() => setShowManual(true)}
                 className="text-white/60 hover:text-white hover:bg-white/5"
               >
                 <HelpCircle className="h-5 w-5" />
@@ -514,6 +516,12 @@ export default function DashboardPage() {
       <OnboardingWizard
         open={showOnboarding}
         onClose={() => setShowOnboarding(false)}
+      />
+
+      {/* User Guide */}
+      <UserManualModal
+        open={showManual}
+        onClose={() => setShowManual(false)}
       />
 
       {/* Edit Transaction Modal */}
