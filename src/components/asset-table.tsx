@@ -13,6 +13,7 @@ import {
   ChevronUp,
   Trash2,
   MoreHorizontal,
+  Pencil,
 } from 'lucide-react';
 import {
   Table,
@@ -63,6 +64,8 @@ function SortIcon({
 interface AssetTableProps {
   holdings: Holding[];
   onDelete?: (ticker: string) => void;
+  onEdit?: (holding: Holding, transactionId: string) => void;
+  onDeleteTransaction?: (holding: Holding, transactionId: string) => void;
   onSort?: (column: string) => void;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
@@ -71,6 +74,8 @@ interface AssetTableProps {
 export function AssetTable({
   holdings,
   onDelete,
+  onEdit,
+  onDeleteTransaction,
   onSort,
   sortColumn,
   sortDirection,
@@ -284,18 +289,19 @@ export function AssetTable({
                           <h4 className="text-sm font-medium text-white/60 mb-3">
                             Transaction History for {holding.ticker}
                           </h4>
-                          <div className="grid grid-cols-5 gap-4 text-xs text-white/40 mb-2 px-3">
+                          <div className="grid grid-cols-7 gap-4 text-xs text-white/40 mb-2 px-3">
                             <span>Date</span>
                             <span>Type</span>
                             <span className="text-right">Quantity</span>
                             <span className="text-right">Price</span>
                             <span className="text-right">Exchange Rate</span>
+                            <span className="text-right col-span-2">Actions</span>
                           </div>
                           <div className="space-y-1">
                             {holding.transactions.map((tx) => (
                               <div
                                 key={tx.id}
-                                className="grid grid-cols-5 gap-4 p-3 rounded-lg bg-white/[0.02] border border-white/5 text-sm"
+                                className="grid grid-cols-7 gap-4 p-3 rounded-lg bg-white/[0.02] border border-white/5 text-sm group"
                               >
                                 <span className="text-white/70">
                                   {format(new Date(tx.transaction_date), 'MMM d, yyyy')}
@@ -320,6 +326,36 @@ export function AssetTable({
                                 </span>
                                 <span className="text-right font-mono text-white/50">
                                   {tx.exchange_rate_to_pln.toFixed(4)}
+                                </span>
+                                <span className="text-right col-span-2 flex gap-2 justify-end">
+                                  {onEdit && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit(holding, tx.id);
+                                      }}
+                                    >
+                                      <Pencil className="h-3 w-3 mr-1" />
+                                      Edit
+                                    </Button>
+                                  )}
+                                  {onDeleteTransaction && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDeleteTransaction(holding, tx.id);
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3 mr-1" />
+                                      Delete
+                                    </Button>
+                                  )}
                                 </span>
                               </div>
                             ))}

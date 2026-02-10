@@ -9,7 +9,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -26,20 +25,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Search, TrendingUp, TrendingDown, X, AlertCircle } from 'lucide-react';
-import { searchTickers } from '@/lib/yahoo';
-import { useDebounce } from '@/hooks';
-import { CURRENCIES, SEARCH_DEBOUNCE_MS, VALIDATION } from '@/lib/constants';
-import type { SearchResult, AssetType, Currency, AddTransactionForm } from '@/types';
+import { Loader2, TrendingUp, TrendingDown, Plus, AlertTriangle, Zap } from 'lucide-react';
+import { AssetSearchInput } from '@/components/asset-search-input';
+import { getAssetQuote, type AssetSearchResult } from '@/actions/asset-search';
+import { detectPriceMultiplier, applyMultiplier, type PriceAnomalyResult } from '@/lib/price-multiplier';
+import { CURRENCIES, VALIDATION } from '@/lib/constants';
+import type { AddTransactionForm, Currency } from '@/types';
 
 // ===========================================
 // FORM VALIDATION SCHEMA
 // ===========================================
 
-const transactionSchema = z.object({
+const addTransactionSchema = z.object({
   ticker: z.string().min(1, 'Ticker is required'),
+  isin: z.string().optional(),
   asset_name: z.string().min(1, 'Asset name is required'),
   asset_type: z.enum(['STOCK', 'CRYPTO', 'ETF', 'BOND', 'COMMODITY']),
   transaction_type: z.enum(['BUY', 'SELL']),
@@ -49,42 +48,41 @@ const transactionSchema = z.object({
   price_per_share: z.number()
     .min(VALIDATION.MIN_PRICE, 'Price must be greater than 0')
     .max(VALIDATION.MAX_PRICE, 'Price is too large'),
-  currency: z.enum(['PLN', 'USD', 'EUR', 'GBP', 'CHF', 'JPY', 'CZK']),
+  currency: z.enum([
+    'PLN', 'USD', 'EUR', 'GBP', 'CHF', 'JPY', 'CZK',
+    'DKK', 'SEK', 'NOK', 'AUD', 'CAD', 'HKD', 'SGD',
+    'NZD', 'MXN', 'ZAR', 'TRY', 'HUF', 'ILS', 'INR',
+    'BRL', 'KRW', 'CNY', 'TWD', 'THB', 'MYR', 'IDR',
+  ]),
   exchange_rate_to_pln: z.number()
     .min(VALIDATION.MIN_EXCHANGE_RATE, 'Exchange rate must be greater than 0')
     .max(VALIDATION.MAX_EXCHANGE_RATE, 'Exchange rate is too large'),
   fees: z.number().min(0).optional(),
   notes: z.string().max(VALIDATION.MAX_NOTES_LENGTH).optional(),
+  broker: z.string().optional(),
   transaction_date: z.string().min(1, 'Date is required'),
 });
 
-type TransactionFormData = z.infer<typeof transactionSchema>;
+type AddTransactionFormData = z.infer<typeof addTransactionSchema>;
 
 interface AddTransactionModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: AddTransactionForm) => Promise<void>;
-  defaultTicker?: string;
 }
 
 export function AddTransactionModal({
   open,
   onClose,
   onSubmit,
-  defaultTicker,
 }: AddTransactionModalProps) {
-  // Search state
-  const [searchQuery, setSearchQuery] = useState(defaultTicker || '');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<SearchResult | null>(null);
-  const [isLoadingRate, setIsLoadingRate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [manualMode, setManualMode] = useState(false);
-
-  // Debounce search query
-  const debouncedSearch = useDebounce(searchQuery, SEARCH_DEBOUNCE_MS);
+  const [isLoadingRate, setIsLoadingRate] = useState(false);
+  const [isLoadingQuote, setIsLoadingQuote] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<AssetSearchResult | null>(null);
+  const [anomaly, setAnomaly] = useState<PriceAnomalyResult | null>(null);
+  const [livePrice, setLivePrice] = useState<number | null>(null);
+  const [liveCurrency, setLiveCurrency] = useState<string | null>(null);
 
   // Form setup
   const {
@@ -94,20 +92,13 @@ export function AddTransactionModal({
     watch,
     reset,
     formState: { errors },
-  } = useForm<TransactionFormData>({
-    resolver: zodResolver(transactionSchema),
+  } = useForm<AddTransactionFormData>({
+    resolver: zodResolver(addTransactionSchema),
     defaultValues: {
-      ticker: '',
-      asset_name: '',
-      asset_type: 'STOCK',
       transaction_type: 'BUY',
-      quantity: 1,
-      price_per_share: 0,
-      currency: 'USD',
-      exchange_rate_to_pln: 1,
-      fees: 0,
-      notes: '',
       transaction_date: format(new Date(), 'yyyy-MM-dd'),
+      fees: 0,
+      exchange_rate_to_pln: 1,
     },
   });
 
@@ -115,37 +106,65 @@ export function AddTransactionModal({
   const transactionType = watch('transaction_type');
   const transactionDate = watch('transaction_date');
 
-  // ===========================================
-  // DEBOUNCED TICKER SEARCH
-  // ===========================================
-
+  // Reset form when modal opens
   useEffect(() => {
-    if (debouncedSearch.length < 1) {
-      setSearchResults([]);
-      return;
+    if (open) {
+      reset({
+        transaction_type: 'BUY',
+        transaction_date: format(new Date(), 'yyyy-MM-dd'),
+        fees: 0,
+        exchange_rate_to_pln: 1,
+        currency: 'PLN',
+      });
+      setSelectedAsset(null);
+      setAnomaly(null);
+      setLivePrice(null);
+      setLiveCurrency(null);
+    }
+  }, [open, reset]);
+
+  // Handle asset selection from search
+  const handleAssetSelect = async (result: AssetSearchResult) => {
+    setSelectedAsset(result);
+    setValue('ticker', result.ticker);
+    setValue('asset_name', result.name);
+    setValue('asset_type', result.assetType);
+    if (result.isin) {
+      setValue('isin', result.isin);
     }
 
-    const search = async () => {
-      setIsSearching(true);
-      try {
-        const results = await searchTickers(debouncedSearch);
-        setSearchResults(results);
-        setShowResults(true);
-      } catch (error) {
-        console.error('Search error:', error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
+    // Try to fetch current quote to prefill price/currency
+    setIsLoadingQuote(true);
+    setAnomaly(null);
+    setLivePrice(null);
+    setLiveCurrency(null);
+    try {
+      const quote = await getAssetQuote(result.ticker);
+      if (quote) {
+        setValue('price_per_share', quote.price);
+        setValue('currency', quote.currency as Currency);
+        setLivePrice(quote.price);
+        setLiveCurrency(quote.currency);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching quote:', error);
+    } finally {
+      setIsLoadingQuote(false);
+    }
+  };
 
-    search();
-  }, [debouncedSearch]);
+  // Clear asset selection
+  const handleAssetClear = () => {
+    setSelectedAsset(null);
+    setValue('ticker', '');
+    setValue('asset_name', '');
+    setValue('isin', '');
+    setAnomaly(null);
+    setLivePrice(null);
+    setLiveCurrency(null);
+  };
 
-  // ===========================================
-  // AUTO-FETCH EXCHANGE RATE BASED ON DATE AND CURRENCY
-  // ===========================================
-
+  // Auto-fetch exchange rate when currency or date changes
   useEffect(() => {
     const fetchRate = async () => {
       if (currency === 'PLN') {
@@ -153,13 +172,12 @@ export function AddTransactionModal({
         return;
       }
 
-      if (!transactionDate) {
+      if (!currency || !transactionDate) {
         return;
       }
 
       setIsLoadingRate(true);
       try {
-        // Import the historical rate function
         const { getHistoricalExchangeRate } = await import('@/lib/yahoo');
         const rate = await getHistoricalExchangeRate(currency as Currency, new Date(transactionDate));
         setValue('exchange_rate_to_pln', rate);
@@ -174,63 +192,55 @@ export function AddTransactionModal({
   }, [currency, transactionDate, setValue]);
 
   // ===========================================
-  // SELECT ASSET FROM SEARCH
+  // PRICE ANOMALY DETECTION
   // ===========================================
+  // Runs whenever the user changes price manually AND we have a live quote
 
-  const handleSelectAsset = (result: SearchResult) => {
-    setSelectedAsset(result);
-    setSearchQuery(result.symbol);
-    setShowResults(false);
-    
-    setValue('ticker', result.symbol);
-    setValue('asset_name', result.name);
-    setValue('asset_type', result.type as AssetType);
+  const pricePerShare = watch('price_per_share');
+
+  useEffect(() => {
+    if (livePrice && pricePerShare && pricePerShare > 0) {
+      const result = detectPriceMultiplier(pricePerShare, livePrice, liveCurrency || undefined);
+      setAnomaly(result.detected ? result : null);
+    } else {
+      setAnomaly(null);
+    }
+  }, [pricePerShare, livePrice, liveCurrency]);
+
+  // Apply suggested multiplier fix
+  const handleApplyMultiplier = () => {
+    if (!anomaly || !pricePerShare) return;
+    const adjusted = applyMultiplier(pricePerShare, anomaly.suggestedMultiplier);
+    setValue('price_per_share', adjusted);
+    setAnomaly(null);
   };
 
   // ===========================================
   // FORM SUBMISSION
   // ===========================================
 
-  const handleFormSubmit = async (data: TransactionFormData) => {
+  const handleFormSubmit = async (data: AddTransactionFormData) => {
     setIsSubmitting(true);
     try {
-      // Convert transaction_date string to Date object
-      const formData: AddTransactionForm = {
+      await onSubmit({
         ...data,
         transaction_date: new Date(data.transaction_date),
-      };
-      await onSubmit(formData);
-      reset();
-      setSearchQuery('');
-      setSelectedAsset(null);
+        fees: data.fees || 0,
+      });
       onClose();
     } catch (error) {
-      console.error('Error submitting transaction:', error);
+      console.error('Error adding transaction:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!open) {
-      reset();
-      setSearchQuery('');
-      setSelectedAsset(null);
-      setSearchResults([]);
-    }
-  }, [open, reset]);
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-[#0a0a0a] border-white/10 text-white">
+      <DialogContent className="sm:max-w-[500px] bg-[#0a0a0a] border-white/10 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-            {transactionType === 'BUY' ? (
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-            ) : (
-              <TrendingDown className="h-5 w-5 text-rose-500" />
-            )}
+            <Plus className="h-5 w-5 text-emerald-500" />
             Add Transaction
           </DialogTitle>
         </DialogHeader>
@@ -266,7 +276,27 @@ export function AddTransactionModal({
             </Button>
           </div>
 
-          {/* Transaction Date - MOVED TO TOP */}
+          {/* Asset Search */}
+          <div className="space-y-2">
+            <Label>Search Asset</Label>
+            <AssetSearchInput
+              onSelect={handleAssetSelect}
+              onClear={handleAssetClear}
+              selectedAsset={selectedAsset}
+              disabled={isSubmitting}
+            />
+            {errors.ticker && (
+              <p className="text-rose-400 text-xs">{errors.ticker.message}</p>
+            )}
+            {isLoadingQuote && (
+              <p className="text-emerald-400 text-xs flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading quote...
+              </p>
+            )}
+          </div>
+
+          {/* Transaction Date */}
           <div className="space-y-2">
             <Label htmlFor="date">Transaction Date</Label>
             <Input
@@ -279,145 +309,6 @@ export function AddTransactionModal({
               <p className="text-rose-400 text-xs">{errors.transaction_date.message}</p>
             )}
           </div>
-
-          {/* Ticker Search */}
-          <div className="space-y-2">
-            <Label htmlFor="ticker">Search Ticker</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40" />
-              <Input
-                id="ticker"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowResults(true);
-                }}
-                placeholder="Search for AAPL, PKO.WA, BTC-USD..."
-                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40"
-              />
-              {isSearching && (
-                <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-white/40" />
-              )}
-              {selectedAsset && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-                  onClick={() => {
-                    setSelectedAsset(null);
-                    setSearchQuery('');
-                    setValue('ticker', '');
-                    setValue('asset_name', '');
-                  }}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-
-            {/* Search Results Dropdown */}
-            <AnimatePresence>
-              {showResults && !selectedAsset && searchQuery.length >= 1 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute z-50 w-full mt-1"
-                >
-                  <div className="rounded-md border border-white/10 bg-[#0a0a0a] max-h-[250px] overflow-hidden">
-                    {isSearching ? (
-                      <div className="px-4 py-8 text-center text-white/60">
-                        <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-                        <p>Searching...</p>
-                      </div>
-                    ) : searchResults.length > 0 ? (
-                      <ScrollArea className="h-[200px]">
-                        {searchResults.map((result, index) => (
-                          <button
-                            key={`${result.symbol}-${result.exchange}-${index}`}
-                            type="button"
-                            className="w-full px-3 py-2 text-left hover:bg-white/5 flex items-center justify-between border-b border-white/5 last:border-0"
-                            onClick={() => handleSelectAsset(result)}
-                          >
-                            <div className="flex-1 min-w-0">
-                              <span className="font-mono font-semibold text-white">
-                                {result.symbol}
-                              </span>
-                              <span className="text-white/60 ml-2 text-sm truncate block">
-                                {result.name}
-                              </span>
-                            </div>
-                            <Badge variant="outline" className="text-xs border-white/20 text-white/60 ml-2">
-                              {result.exchange}
-                            </Badge>
-                          </button>
-                        ))}
-                      </ScrollArea>
-                    ) : (
-                      <div className="px-4 py-6">
-                        <div className="text-center text-white/60 mb-3">
-                          <AlertCircle className="h-5 w-5 mx-auto mb-2" />
-                          <p className="text-sm">No results found for &quot;{searchQuery}&quot;</p>
-                        </div>
-                        <button
-                          type="button"
-                          className="w-full px-3 py-2 text-left bg-emerald-500/10 hover:bg-emerald-500/20 rounded border border-emerald-500/30 transition-colors"
-                          onClick={() => handleSelectAsset({
-                            symbol: searchQuery.toUpperCase(),
-                            name: searchQuery.toUpperCase(),
-                            exchange: 'Manual Entry',
-                            type: 'STOCK',
-                            exchDisp: 'Manual',
-                          })}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-emerald-400 text-sm">→</span>
-                            <div>
-                              <span className="font-mono font-semibold text-emerald-400 block">
-                                {searchQuery.toUpperCase()}
-                              </span>
-                              <span className="text-white/60 text-xs">
-                                Add manually (enter details yourself)
-                              </span>
-                            </div>
-                          </div>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {errors.ticker && (
-              <p className="text-rose-400 text-sm flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {errors.ticker.message}
-              </p>
-            )}
-          </div>
-
-          {/* Selected Asset Badge */}
-          {selectedAsset && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-3 rounded-lg bg-white/5 border border-white/10"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-mono font-bold text-white">
-                    {selectedAsset.symbol}
-                  </span>
-                  <p className="text-sm text-white/60">{selectedAsset.name}</p>
-                </div>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                  {selectedAsset.type}
-                </Badge>
-              </div>
-            </motion.div>
-          )}
 
           {/* Quantity and Price Row */}
           <div className="grid grid-cols-2 gap-4">
@@ -450,6 +341,45 @@ export function AddTransactionModal({
             </div>
           </div>
 
+          {/* Price Anomaly Alert */}
+          {anomaly && (
+            <div className={`rounded-lg p-3 flex items-start gap-3 ${
+              anomaly.severity === 'auto' 
+                ? 'bg-amber-500/10 border border-amber-500/30'
+                : 'bg-rose-500/10 border border-rose-500/30'
+            }`}>
+              <AlertTriangle className={`h-5 w-5 mt-0.5 shrink-0 ${
+                anomaly.severity === 'auto' ? 'text-amber-400' : 'text-rose-400'
+              }`} />
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-medium ${
+                  anomaly.severity === 'auto' ? 'text-amber-300' : 'text-rose-300'
+                }`}>
+                  {anomaly.label}
+                </p>
+                <p className="text-xs text-white/40 mt-0.5">
+                  Your price: {pricePerShare?.toFixed(2)} • Live: {livePrice?.toFixed(2)} • Ratio: {anomaly.ratio.toFixed(2)}×
+                </p>
+              </div>
+              {anomaly.suggestedMultiplier !== 1 && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleApplyMultiplier}
+                  className={`shrink-0 gap-1 ${
+                    anomaly.severity === 'auto'
+                      ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border-amber-500/40'
+                      : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border-rose-500/40'
+                  }`}
+                  variant="outline"
+                >
+                  <Zap className="h-3 w-3" />
+                  Fix (×{anomaly.suggestedMultiplier})
+                </Button>
+              )}
+            </div>
+          )}
+
           {/* Currency and Exchange Rate Row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -469,20 +399,24 @@ export function AddTransactionModal({
                   ))}
                 </SelectContent>
               </Select>
+              {errors.currency && (
+                <p className="text-rose-400 text-xs">{errors.currency.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="exchange_rate" className="flex items-center gap-2">
+              <Label htmlFor="rate">
                 Exchange Rate to PLN
-                {isLoadingRate && <Loader2 className="h-3 w-3 animate-spin" />}
+                {isLoadingRate && (
+                  <Loader2 className="inline h-3 w-3 ml-1 animate-spin" />
+                )}
               </Label>
               <Input
-                id="exchange_rate"
+                id="rate"
                 type="number"
                 step="any"
                 {...register('exchange_rate_to_pln', { valueAsNumber: true })}
                 className="bg-white/5 border-white/10 text-white"
-                disabled={currency === 'PLN'}
               />
               {errors.exchange_rate_to_pln && (
                 <p className="text-rose-400 text-xs">{errors.exchange_rate_to_pln.message}</p>
@@ -490,43 +424,78 @@ export function AddTransactionModal({
             </div>
           </div>
 
-          {/* Notes */}
+          {/* Fees */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label htmlFor="fees">Fees (optional)</Label>
             <Input
-              id="notes"
-              {...register('notes')}
-              placeholder="Add any notes..."
-              className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+              id="fees"
+              type="number"
+              step="any"
+              {...register('fees', { valueAsNumber: true })}
+              className="bg-white/5 border-white/10 text-white"
+              placeholder="0.00"
+            />
+            {errors.fees && (
+              <p className="text-rose-400 text-xs">{errors.fees.message}</p>
+            )}
+          </div>
+
+          {/* Broker */}
+          <div className="space-y-2">
+            <Label htmlFor="broker">Broker (optional)</Label>
+            <Input
+              id="broker"
+              type="text"
+              {...register('broker')}
+              className="bg-white/5 border-white/10 text-white"
+              placeholder="e.g., XTB, Interactive Brokers"
             />
           </div>
 
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            disabled={isSubmitting || !selectedAsset}
-            className={`w-full ${
-              transactionType === 'BUY'
-                ? 'bg-emerald-600 hover:bg-emerald-700'
-                : 'bg-rose-600 hover:bg-rose-700'
-            }`}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                {transactionType === 'BUY' ? (
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                ) : (
-                  <TrendingDown className="h-4 w-4 mr-2" />
-                )}
-                {transactionType === 'BUY' ? 'Add Buy Transaction' : 'Add Sell Transaction'}
-              </>
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (optional)</Label>
+            <Input
+              id="notes"
+              type="text"
+              {...register('notes')}
+              className="bg-white/5 border-white/10 text-white"
+              placeholder="Any additional notes..."
+            />
+            {errors.notes && (
+              <p className="text-rose-400 text-xs">{errors.notes.message}</p>
             )}
-          </Button>
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="flex-1 border-white/10 text-white hover:bg-white/5"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !selectedAsset}
+              className="flex-1 bg-emerald-500 text-white hover:bg-emerald-600"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Transaction
+                </>
+              )}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

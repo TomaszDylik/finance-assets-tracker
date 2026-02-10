@@ -12,7 +12,8 @@ import {
   ChevronUp,
   MoreVertical,
   Trash2,
-  History
+  History,
+  Pencil
 } from 'lucide-react';
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,10 +37,11 @@ import { format } from 'date-fns';
 interface AssetCardProps {
   holding: Holding;
   onDelete?: (ticker: string) => void;
+  onEdit?: (holding: Holding, transactionId: string) => void;
   index: number;
 }
 
-export function AssetCard({ holding, onDelete, index }: AssetCardProps) {
+export function AssetCard({ holding, onDelete, onEdit, index }: AssetCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const isProfit = (holding.total_return_pln ?? 0) >= 0;
@@ -246,7 +248,7 @@ export function AssetCard({ holding, onDelete, index }: AssetCardProps) {
                   {holding.transactions.map((tx) => (
                     <div
                       key={tx.id}
-                      className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5"
+                      className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5 group"
                     >
                       <div className="flex items-center gap-2">
                         <Badge
@@ -263,13 +265,28 @@ export function AssetCard({ holding, onDelete, index }: AssetCardProps) {
                           {tx.price_per_share.toFixed(2)}
                         </span>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-white/50">
-                          {format(new Date(tx.transaction_date), 'MMM d, yyyy')}
-                        </p>
-                        <p className="text-xs text-white/30">
-                          Rate: {tx.exchange_rate_to_pln.toFixed(4)}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        <div className="text-right">
+                          <p className="text-xs text-white/50">
+                            {format(new Date(tx.transaction_date), 'MMM d, yyyy')}
+                          </p>
+                          <p className="text-xs text-white/30">
+                            Rate: {tx.exchange_rate_to_pln.toFixed(4)}
+                          </p>
+                        </div>
+                        {onEdit && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(holding, tx.id);
+                            }}
+                          >
+                            <Pencil className="h-3 w-3 text-white/60 hover:text-white" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}

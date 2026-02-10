@@ -28,9 +28,11 @@ interface AssetListProps {
   holdings: Holding[];
   isLoading: boolean;
   onDelete?: (ticker: string) => void;
+  onEdit?: (holding: Holding, transactionId: string) => void;
+  onDeleteTransaction?: (holding: Holding, transactionId: string) => void;
 }
 
-export function AssetList({ holdings, isLoading, onDelete }: AssetListProps) {
+export function AssetList({ holdings, isLoading, onDelete, onEdit, onDeleteTransaction }: AssetListProps) {
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'auto' | 'grid' | 'table'>('auto');
   const [searchQuery, setSearchQuery] = useState('');
@@ -191,6 +193,8 @@ export function AssetList({ holdings, isLoading, onDelete }: AssetListProps) {
         <AssetTable
           holdings={sortedHoldings}
           onDelete={onDelete}
+          onEdit={onEdit}
+          onDeleteTransaction={onDeleteTransaction}
           onSort={handleSort}
           sortColumn={sortColumn}
           sortDirection={sortDirection}
@@ -202,6 +206,7 @@ export function AssetList({ holdings, isLoading, onDelete }: AssetListProps) {
               key={holding.ticker}
               holding={holding}
               onDelete={onDelete}
+              onEdit={onEdit}
               index={index}
             />
           ))}

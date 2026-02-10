@@ -9,17 +9,29 @@ import { TrendingUp, TrendingDown, Wallet, PieChart, Activity, Calendar } from '
 import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency, formatPercentage } from '@/lib/calculations';
 import type { PortfolioSummary as PortfolioSummaryType } from '@/lib/calculations';
+import type { LucideIcon } from 'lucide-react';
 
 interface PortfolioSummaryProps {
   summary: PortfolioSummaryType;
   lastUpdated?: Date;
 }
 
+interface StatItem {
+  label: string;
+  value: string;
+  subValue?: string;
+  tooltip?: string;
+  icon: LucideIcon;
+  color: string;
+  bgColor: string;
+}
+
 export function PortfolioSummary({ summary, lastUpdated }: PortfolioSummaryProps) {
   const isProfit = summary.totalReturnPLN >= 0;
   const isDayPositive = summary.dayChangePLN >= 0;
+  const hasRealizedProfit = summary.realizedProfitPLN !== 0;
 
-  const stats = [
+  const stats: StatItem[] = [
     {
       label: 'Total Value',
       value: formatCurrency(summary.totalValuePLN),
@@ -38,6 +50,9 @@ export function PortfolioSummary({ summary, lastUpdated }: PortfolioSummaryProps
       label: 'Total Return',
       value: formatCurrency(Math.abs(summary.totalReturnPLN)),
       subValue: formatPercentage(summary.totalReturnPercent),
+      tooltip: hasRealizedProfit 
+        ? `Unrealized: ${formatCurrency(summary.unrealizedReturnPLN)} | Realized: ${formatCurrency(summary.realizedProfitPLN)}`
+        : undefined,
       icon: isProfit ? TrendingUp : TrendingDown,
       color: isProfit ? 'text-emerald-400' : 'text-rose-400',
       bgColor: isProfit ? 'from-emerald-500/20 to-emerald-500/5' : 'from-rose-500/20 to-rose-500/5',
@@ -80,6 +95,11 @@ export function PortfolioSummary({ summary, lastUpdated }: PortfolioSummaryProps
                 {stat.subValue && (
                   <p className={`text-sm font-mono mt-1 ${stat.color}`}>
                     {stat.subValue}
+                  </p>
+                )}
+                {stat.tooltip && (
+                  <p className="text-[10px] text-white/30 mt-1" title={stat.tooltip}>
+                    {stat.tooltip}
                   </p>
                 )}
               </CardContent>
