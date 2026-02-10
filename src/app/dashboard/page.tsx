@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Loader2,
   Trash2,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,6 +26,8 @@ import { EditTransactionModal } from "@/components/edit-transaction-modal";
 import { ClosedPositionsList } from "@/components/closed-positions-list";
 import { TransactionHistory } from "@/components/transaction-history";
 import { RefreshButton } from "@/components/refresh-button";
+import { OnboardingWizard, hasSeenOnboarding } from "@/components/onboarding-wizard";
+import { EmptyState } from "@/components/empty-state";
 
 import { useAuth } from "@/providers/auth-provider";
 import { getTransactions, addTransaction, deleteAllTransactionsForTicker, deleteAllTransactions, deleteAllClosedPositions, updateTransaction, deleteTransaction, getClosedPositions } from "@/actions/transactions";
@@ -41,6 +44,13 @@ export default function DashboardPage() {
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editTransaction, setEditTransaction] = useState<Transaction | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (!hasSeenOnboarding()) {
+      setShowOnboarding(true);
+    }
+  }, []);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -337,6 +347,16 @@ export default function DashboardPage() {
               <Button
                 variant="ghost"
                 size="icon"
+                title="Help & Onboarding"
+                onClick={() => setShowOnboarding(true)}
+                className="text-white/60 hover:text-white hover:bg-white/5"
+              >
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
                 title="Delete all transactions"
                 onClick={() => {
                   if (window.confirm('Are you sure you want to DELETE ALL transactions and clear your entire portfolio? This cannot be undone.')) {
@@ -418,32 +438,7 @@ export default function DashboardPage() {
               </Button>
             </motion.div>
           ) : holdingsWithLiveData.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-card p-12 text-center"
-            >
-              <div className="h-20 w-20 rounded-full bg-linear-to-br from-emerald-500/20 to-teal-600/20 flex items-center justify-center mx-auto mb-6">
-                <TrendingUp className="h-10 w-10 text-emerald-500" />
-              </div>
-              <h2 className="text-2xl font-semibold text-white mb-2">
-                Welcome to FinTrack
-              </h2>
-              <p className="text-white/60 mb-6 max-w-md mx-auto">
-                Start building your portfolio by adding your first transaction.
-                Track stocks, ETFs, and crypto with real-time data.
-              </p>
-              <div className="flex gap-3 justify-center flex-wrap">
-                <Button
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
-                >
-                  <Plus className="h-5 w-5" />
-                  Add Your First Transaction
-                </Button>
-              </div>
-            </motion.div>
+            <EmptyState onAddTransaction={() => setIsAddModalOpen(true)} />
           ) : (
             <motion.div
               key="content"
@@ -513,6 +508,12 @@ export default function DashboardPage() {
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={async (data) => { addTransactionMutation.mutate(data); }}
+      />
+
+      {/* Onboarding Wizard */}
+      <OnboardingWizard
+        open={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
       />
 
       {/* Edit Transaction Modal */}
