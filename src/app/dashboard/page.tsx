@@ -289,12 +289,16 @@ export default function DashboardPage() {
   };
 
   // Loading state
-  if (authLoading || !user) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   const isLoading = transactionsLoading || snapshotsLoading;

@@ -1,7 +1,3 @@
-// ===========================================
-// Landing Page
-// ===========================================
-
 import Link from 'next/link';
 import { TrendingUp, Shield, Zap, Globe, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';

@@ -1,9 +1,5 @@
 'use client';
 
-// ===========================================
-// Add Transaction Modal Component
-// ===========================================
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,10 +27,6 @@ import { getAssetQuote, type AssetSearchResult } from '@/actions/asset-search';
 import { detectPriceMultiplier, applyMultiplier, type PriceAnomalyResult } from '@/lib/price-multiplier';
 import { CURRENCIES, VALIDATION } from '@/lib/constants';
 import type { AddTransactionForm, Currency } from '@/types';
-
-// ===========================================
-// FORM VALIDATION SCHEMA
-// ===========================================
 
 const addTransactionSchema = z.object({
   ticker: z.string().min(1, 'Ticker is required'),
@@ -191,11 +183,6 @@ export function AddTransactionModal({
     fetchRate();
   }, [currency, transactionDate, setValue]);
 
-  // ===========================================
-  // PRICE ANOMALY DETECTION
-  // ===========================================
-  // Runs whenever the user changes price manually AND we have a live quote
-
   const pricePerShare = watch('price_per_share');
 
   useEffect(() => {
@@ -214,10 +201,6 @@ export function AddTransactionModal({
     setValue('price_per_share', adjusted);
     setAnomaly(null);
   };
-
-  // ===========================================
-  // FORM SUBMISSION
-  // ===========================================
 
   const handleFormSubmit = async (data: AddTransactionFormData) => {
     setIsSubmitting(true);
