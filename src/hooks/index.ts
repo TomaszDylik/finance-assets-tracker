@@ -37,11 +37,12 @@ export function useRefreshCooldown(): RefreshCooldownState {
   });
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isActive = cooldownRemaining > 0;
 
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
 
-    if (cooldownRemaining > 0) {
+    if (isActive) {
       intervalRef.current = setInterval(() => {
         setCooldownRemaining((prev) => {
           if (prev <= 1) {
@@ -56,7 +57,7 @@ export function useRefreshCooldown(): RefreshCooldownState {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [cooldownRemaining > 0]);
+  }, [isActive]);
 
   const triggerRefresh = useCallback(() => {
     const now = new Date();

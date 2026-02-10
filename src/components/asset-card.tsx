@@ -53,7 +53,7 @@ export function AssetCard({ holding, onDelete, onEdit, index }: AssetCardProps) 
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
     >
-      <Card className="bg-white/[0.03] border-white/10 backdrop-blur-xl overflow-hidden">
+      <Card className="bg-white/3 border-white/10 backdrop-blur-xl overflow-hidden">
         <CardContent className="p-0">
           {/* Main Content */}
           <div
@@ -64,14 +64,14 @@ export function AssetCard({ holding, onDelete, onEdit, index }: AssetCardProps) 
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 {/* Ticker Badge */}
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center border border-emerald-500/20">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center border border-emerald-500/20">
                   <span className="font-mono font-bold text-emerald-400 text-sm">
                     {holding.ticker.slice(0, 4)}
                   </span>
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">{holding.ticker}</h3>
-                  <p className="text-sm text-white/60 truncate max-w-[150px]">
+                  <p className="text-sm text-white/60 truncate max-w-37.5">
                     {holding.asset_name}
                   </p>
                 </div>
@@ -248,7 +248,7 @@ export function AssetCard({ holding, onDelete, onEdit, index }: AssetCardProps) 
                   {holding.transactions.map((tx) => (
                     <div
                       key={tx.id}
-                      className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5 group"
+                      className="flex items-center justify-between p-2 rounded-lg bg-white/2 border border-white/5 group"
                     >
                       <div className="flex items-center gap-2">
                         <Badge

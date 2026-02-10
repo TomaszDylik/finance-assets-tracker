@@ -90,7 +90,7 @@ export default function RegisterPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-indigo-500/5" />
+        <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 via-transparent to-indigo-500/5" />
         
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -118,7 +118,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-indigo-500/5" />
+      <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 via-transparent to-indigo-500/5" />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -127,13 +127,13 @@ export default function RegisterPage() {
       >
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
             <TrendingUp className="h-6 w-6 text-white" />
           </div>
           <span className="text-2xl font-bold text-white">FinTrack</span>
         </div>
 
-        <Card className="bg-white/[0.03] border-white/10 backdrop-blur-xl">
+        <Card className="bg-white/3 border-white/10 backdrop-blur-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-white">Create an account</CardTitle>
             <CardDescription className="text-white/50">

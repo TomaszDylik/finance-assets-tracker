@@ -52,7 +52,7 @@ function CustomTooltip({ active, payload }: {
   const isUp = data.profit >= 0;
 
   return (
-    <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-3 shadow-xl min-w-[180px]">
+    <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-3 shadow-xl min-w-45">
       <p className="text-white/60 text-xs mb-2">{data.fullDate}</p>
       
       <div className="space-y-1.5">
@@ -236,8 +236,8 @@ export function PortfolioHistoryChart({
   // Loading state
   if (isLoading && data.length === 0) {
     return (
-      <Card className="bg-white/[0.03] border-white/10 backdrop-blur-xl">
-        <CardContent className="flex items-center justify-center h-[400px]">
+      <Card className="bg-white/3 border-white/10 backdrop-blur-xl">
+        <CardContent className="flex items-center justify-center h-100">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-white/40" />
             <p className="text-white/40">Loading portfolio history...</p>
@@ -250,8 +250,8 @@ export function PortfolioHistoryChart({
   // Error state
   if (error) {
     return (
-      <Card className="bg-white/[0.03] border-white/10 backdrop-blur-xl">
-        <CardContent className="flex items-center justify-center h-[400px]">
+      <Card className="bg-white/3 border-white/10 backdrop-blur-xl">
+        <CardContent className="flex items-center justify-center h-100">
           <div className="flex flex-col items-center gap-3 text-center">
             <p className="text-rose-400">Failed to load chart data</p>
             <p className="text-white/40 text-sm">{error}</p>
@@ -267,8 +267,8 @@ export function PortfolioHistoryChart({
   // Empty state
   if (!chartData || chartData.length === 0) {
     return (
-      <Card className="bg-white/[0.03] border-white/10 backdrop-blur-xl">
-        <CardContent className="flex items-center justify-center h-[400px]">
+      <Card className="bg-white/3 border-white/10 backdrop-blur-xl">
+        <CardContent className="flex items-center justify-center h-100">
           <div className="flex flex-col items-center gap-3 text-center">
             <TrendingUp className="h-12 w-12 text-white/20" />
             <p className="text-white/60">No portfolio data yet</p>
@@ -285,7 +285,7 @@ export function PortfolioHistoryChart({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <Card className="bg-white/[0.03] border-white/10 backdrop-blur-xl">
+      <Card className="bg-white/3 border-white/10 backdrop-blur-xl">
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -380,7 +380,7 @@ export function PortfolioHistoryChart({
           )}
 
           {/* Chart */}
-          <div className="h-[300px]">
+          <div className="h-75">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart 
                 data={chartData}

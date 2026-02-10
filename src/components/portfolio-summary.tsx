@@ -78,9 +78,9 @@ export function PortfolioSummary({ summary, lastUpdated }: PortfolioSummaryProps
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="bg-white/[0.03] border-white/10 backdrop-blur-xl overflow-hidden relative">
+            <Card className="bg-white/3 border-white/10 backdrop-blur-xl overflow-hidden relative">
               {/* Gradient Background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgColor} opacity-50`} />
+              <div className={`absolute inset-0 bg-linear-to-br ${stat.bgColor} opacity-50`} />
               
               <CardContent className="p-4 relative">
                 <div className="flex items-start justify-between mb-2">

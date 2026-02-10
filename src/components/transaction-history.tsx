@@ -112,7 +112,7 @@ export function TransactionHistory({ transactions, onEdit, onDelete }: Transacti
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-500/20 to-indigo-600/20 flex items-center justify-center">
             <History className="h-5 w-5 text-blue-500" />
           </div>
           <div>
@@ -153,7 +153,7 @@ export function TransactionHistory({ transactions, onEdit, onDelete }: Transacti
         </div>
         
         <Select value={filterType} onValueChange={(v) => setFilterType(v as typeof filterType)}>
-          <SelectTrigger className="w-full sm:w-[120px] bg-white/5 border-white/10 text-white">
+          <SelectTrigger className="w-full sm:w-30 bg-white/5 border-white/10 text-white">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue />
           </SelectTrigger>
@@ -166,7 +166,7 @@ export function TransactionHistory({ transactions, onEdit, onDelete }: Transacti
 
         {uniqueBrokers.length > 0 && (
           <Select value={filterBroker} onValueChange={setFilterBroker}>
-            <SelectTrigger className="w-full sm:w-[140px] bg-white/5 border-white/10 text-white">
+            <SelectTrigger className="w-full sm:w-35 bg-white/5 border-white/10 text-white">
               <Building className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>

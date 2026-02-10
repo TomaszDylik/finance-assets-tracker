@@ -14,7 +14,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
                 <TrendingUp className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold text-white">FinTrack</span>
@@ -107,7 +107,7 @@ export default function HomePage() {
             ].map((feature, index) => (
               <div
                 key={index}
-                className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-white/20 transition-colors"
+                className="p-6 rounded-2xl bg-white/2 border border-white/10 hover:border-white/20 transition-colors"
               >
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-emerald-400" />
@@ -123,7 +123,7 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="p-12 rounded-3xl bg-gradient-to-br from-emerald-500/10 to-indigo-500/10 border border-white/10">
+          <div className="p-12 rounded-3xl bg-linear-to-br from-emerald-500/10 to-indigo-500/10 border border-white/10">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               Ready to Start Tracking?
             </h2>

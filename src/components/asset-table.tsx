@@ -87,7 +87,7 @@ export function AssetTable({
   };
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-xl overflow-hidden">
+    <div className="rounded-xl border border-white/10 bg-white/2 backdrop-blur-xl overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="border-white/10 hover:bg-transparent">
@@ -123,7 +123,7 @@ export function AssetTable({
             >
               Return <SortIcon column="return" sortColumn={sortColumn} sortDirection={sortDirection} />
             </TableHead>
-            <TableHead className="text-white/60 text-right w-[50px]"></TableHead>
+            <TableHead className="text-white/60 text-right w-12.5"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -135,7 +135,7 @@ export function AssetTable({
             return (
               <Fragment key={holding.ticker}>
                 <TableRow
-                  className="border-white/5 hover:bg-white/[0.03] cursor-pointer group"
+                  className="border-white/5 hover:bg-white/3 cursor-pointer group"
                   onClick={() => toggleExpand(holding.ticker)}
                 >
                   {/* Asset */}
@@ -146,14 +146,14 @@ export function AssetTable({
                       transition={{ delay: index * 0.03 }}
                       className="flex items-center gap-3"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center border border-emerald-500/20">
+                      <div className="w-10 h-10 rounded-lg bg-linear-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center border border-emerald-500/20">
                         <span className="font-mono font-bold text-emerald-400 text-xs">
                           {holding.ticker.slice(0, 3)}
                         </span>
                       </div>
                       <div>
                         <p className="font-semibold text-white">{holding.ticker}</p>
-                        <p className="text-xs text-white/50 truncate max-w-[120px]">
+                        <p className="text-xs text-white/50 truncate max-w-30">
                           {holding.asset_name}
                         </p>
                       </div>
@@ -301,7 +301,7 @@ export function AssetTable({
                             {holding.transactions.map((tx) => (
                               <div
                                 key={tx.id}
-                                className="grid grid-cols-7 gap-4 p-3 rounded-lg bg-white/[0.02] border border-white/5 text-sm group"
+                                className="grid grid-cols-7 gap-4 p-3 rounded-lg bg-white/2 border border-white/5 text-sm group"
                               >
                                 <span className="text-white/70">
                                   {format(new Date(tx.transaction_date), 'MMM d, yyyy')}

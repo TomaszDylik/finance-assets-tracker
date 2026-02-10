@@ -146,7 +146,7 @@ export function AssetList({ holdings, isLoading, onDelete, onEdit, onDeleteTrans
           value={filterType}
           onValueChange={(val) => setFilterType(val as AssetType | 'ALL')}
         >
-          <SelectTrigger className="w-full sm:w-[150px] bg-white/5 border-white/10 text-white">
+          <SelectTrigger className="w-full sm:w-37.5 bg-white/5 border-white/10 text-white">
             <Filter className="h-4 w-4 mr-2 text-white/40" />
             <SelectValue />
           </SelectTrigger>

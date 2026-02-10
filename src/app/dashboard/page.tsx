@@ -307,7 +307,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
                 <TrendingUp className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -420,7 +420,7 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               className="glass-card p-12 text-center"
             >
-              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-600/20 flex items-center justify-center mx-auto mb-6">
+              <div className="h-20 w-20 rounded-full bg-linear-to-br from-emerald-500/20 to-teal-600/20 flex items-center justify-center mx-auto mb-6">
                 <TrendingUp className="h-10 w-10 text-emerald-500" />
               </div>
               <h2 className="text-2xl font-semibold text-white mb-2">

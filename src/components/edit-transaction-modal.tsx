@@ -174,7 +174,7 @@ export function EditTransactionModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-[#0a0a0a] border-white/10 text-white">
+      <DialogContent className="sm:max-w-125 bg-[#0a0a0a] border-white/10 text-white">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold flex items-center gap-2">
             {transactionType === 'BUY' ? (
