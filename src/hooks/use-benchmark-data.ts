@@ -8,6 +8,8 @@ import type { Transaction } from '@/types';
 export interface BenchmarkDataPoint {
   date: string;
   benchmarkValue: number;
+  totalInvested: number;
+  benchmarkReturnPercent: number;
 }
 
 const BENCHMARK_CACHE_KEY = 'benchmark_history_cache';
@@ -89,6 +91,7 @@ export function useBenchmarkData(
       }
 
       let phantomUnits = 0;
+      let totalInvested = 0;
       let lastKnownPrice: number | null = null;
       let currentDate = startDate;
 
@@ -106,13 +109,20 @@ export function useBenchmarkData(
         if (dayTxs && lastKnownPrice && lastKnownPrice > 0) {
           for (const tx of dayTxs) {
             phantomUnits += tx.amountPLN / lastKnownPrice;
+            totalInvested += tx.amountPLN;
           }
         }
 
         if (phantomUnits > 0 && lastKnownPrice) {
+          const benchmarkValue = phantomUnits * lastKnownPrice;
+          const benchmarkReturnPercent = totalInvested > 0
+            ? ((benchmarkValue - totalInvested) / totalInvested) * 100
+            : 0;
           result.push({
             date: dateStr,
-            benchmarkValue: phantomUnits * lastKnownPrice,
+            benchmarkValue,
+            totalInvested,
+            benchmarkReturnPercent,
           });
         }
 

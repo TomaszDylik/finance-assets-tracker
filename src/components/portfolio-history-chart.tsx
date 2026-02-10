@@ -11,6 +11,7 @@ import {
   Tooltip,
   Line,
   ComposedChart,
+  ReferenceLine,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,77 +29,84 @@ interface PortfolioHistoryChartProps {
 }
 
 type TimeRange = '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL';
-type CompareMode = 'cost-basis' | 'sp500';
 
 interface ChartDataPoint {
   date: string;
   fullDate: string;
+  returnPercent: number;
   invested: number;
   marketValue: number;
-  profit: number;
-  profitPercent: number;
-  benchmark?: number;
-  alpha?: number;
+  benchmarkReturnPercent?: number;
+  benchmarkValue?: number;
 }
 
-function CustomTooltip({ active, payload, compareMode }: {
+/**
+ * Calculate the SVG gradient offset so the color switches exactly at 0%.
+ * Returns a value 0..1 representing where 0% sits between dataMax and dataMin.
+ */
+function calculateGradientOffset(data: ChartDataPoint[]): number {
+  const values = data.map((d) => d.returnPercent);
+  const dataMax = Math.max(...values);
+  const dataMin = Math.min(...values);
+
+  if (dataMax <= 0) return 0;
+  if (dataMin >= 0) return 1;
+
+  return dataMax / (dataMax - dataMin);
+}
+
+function CustomTooltip({ active, payload, showBenchmark }: {
   active?: boolean;
-  payload?: Array<{ value: number; dataKey: string; color: string; payload: ChartDataPoint }>;
-  compareMode: CompareMode;
+  payload?: Array<{ value: number; dataKey: string; payload: ChartDataPoint }>;
+  showBenchmark: boolean;
 }) {
   if (!active || !payload || !payload.length) return null;
 
   const data = payload[0].payload;
-  const isUp = data.profit >= 0;
+  const isUp = data.returnPercent >= 0;
 
   return (
     <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-3 shadow-xl min-w-52">
       <p className="text-white/60 text-xs mb-2">{data.fullDate}</p>
 
       <div className="space-y-1.5">
-        {compareMode === 'cost-basis' && (
-          <div className="flex justify-between items-center">
-            <span className="text-white/60 text-sm">Invested:</span>
-            <span className="text-blue-400 font-medium">{formatCurrency(data.invested)}</span>
-          </div>
-        )}
         <div className="flex justify-between items-center">
-          <span className="text-white/60 text-sm">Value:</span>
-          <span className="text-emerald-400 font-medium">{formatCurrency(data.marketValue)}</span>
+          <span className="text-white/60 text-sm">Return:</span>
+          <span className={`font-semibold ${isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
+            {isUp ? '+' : ''}{data.returnPercent.toFixed(2)}%
+          </span>
         </div>
 
-        {compareMode === 'sp500' && data.benchmark !== undefined && (
-          <>
+        <div className="flex justify-between items-center">
+          <span className="text-white/60 text-sm">Current Value:</span>
+          <span className="text-white font-medium">{formatCurrency(data.marketValue)}</span>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-white/60 text-sm">Invested:</span>
+          <span className="text-blue-400 font-medium">{formatCurrency(data.invested)}</span>
+        </div>
+
+        {showBenchmark && data.benchmarkReturnPercent !== undefined && (
+          <div className="border-t border-white/10 pt-1.5 mt-1.5">
             <div className="flex justify-between items-center">
               <span className="text-white/60 text-sm">S&P 500:</span>
-              <span className="text-slate-400 font-medium">{formatCurrency(data.benchmark)}</span>
+              <span className={`font-semibold ${
+                data.benchmarkReturnPercent >= 0 ? 'text-slate-300' : 'text-slate-400'
+              }`}>
+                {data.benchmarkReturnPercent >= 0 ? '+' : ''}{data.benchmarkReturnPercent.toFixed(2)}%
+              </span>
             </div>
-            {data.alpha !== undefined && (
-              <div className="border-t border-white/10 pt-1.5 mt-1.5">
-                <div className={`flex justify-between items-center ${data.alpha >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  <span className="text-sm flex items-center gap-1">
-                    {data.alpha >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    Alpha:
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-white/60 text-sm">Alpha:</span>
+              {(() => {
+                const alpha = data.returnPercent - data.benchmarkReturnPercent;
+                return (
+                  <span className={`font-semibold ${alpha >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {alpha >= 0 ? '+' : ''}{alpha.toFixed(2)}pp
                   </span>
-                  <span className="font-semibold">
-                    {data.alpha >= 0 ? '+' : ''}{formatCurrency(data.alpha)}
-                  </span>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {compareMode === 'cost-basis' && (
-          <div className="border-t border-white/10 pt-1.5 mt-1.5">
-            <div className={`flex justify-between items-center ${isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
-              <span className="text-sm flex items-center gap-1">
-                {isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                Profit:
-              </span>
-              <span className="font-semibold">
-                {isUp ? '+' : ''}{formatCurrency(data.profit)} ({isUp ? '+' : ''}{data.profitPercent.toFixed(2)}%)
-              </span>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -107,23 +115,17 @@ function CustomTooltip({ active, payload, compareMode }: {
   );
 }
 
-function CustomLegend({ compareMode }: { compareMode: CompareMode }) {
+function CustomLegend({ showBenchmark }: { showBenchmark: boolean }) {
   return (
     <div className="flex justify-center gap-6 mt-2">
-      {compareMode === 'cost-basis' && (
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-blue-500" />
-          <span className="text-white/60 text-sm">Invested Capital</span>
-        </div>
-      )}
       <div className="flex items-center gap-2">
         <div className="w-3 h-3 rounded-full bg-emerald-500" />
-        <span className="text-white/60 text-sm">Market Value</span>
+        <span className="text-white/60 text-sm">My Return %</span>
       </div>
-      {compareMode === 'sp500' && (
+      {showBenchmark && (
         <div className="flex items-center gap-2">
           <div className="w-3 h-0.5 border-t-2 border-dashed border-slate-400" />
-          <span className="text-white/60 text-sm">S&P 500 Benchmark</span>
+          <span className="text-white/60 text-sm">S&P 500 Return %</span>
         </div>
       )}
     </div>
@@ -135,7 +137,7 @@ export function PortfolioHistoryChart({
   onRefreshComplete,
 }: PortfolioHistoryChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('1M');
-  const [compareMode, setCompareMode] = useState<CompareMode>('cost-basis');
+  const [showBenchmark, setShowBenchmark] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastTransactionsLength, setLastTransactionsLength] = useState(transactions.length);
 
@@ -157,33 +159,33 @@ export function PortfolioHistoryChart({
     isLoading: benchmarkLoading,
     refresh: refreshBenchmark,
     clearCache: clearBenchmarkCache,
-  } = useBenchmarkData(transactions, compareMode === 'sp500');
+  } = useBenchmarkData(transactions, showBenchmark);
 
   useEffect(() => {
     if (transactions.length !== lastTransactionsLength) {
       clearCache();
       clearBenchmarkCache();
       refresh();
-      if (compareMode === 'sp500') refreshBenchmark();
+      if (showBenchmark) refreshBenchmark();
       setLastTransactionsLength(transactions.length);
     }
-  }, [transactions.length, lastTransactionsLength, clearCache, clearBenchmarkCache, refresh, refreshBenchmark, compareMode]);
+  }, [transactions.length, lastTransactionsLength, clearCache, clearBenchmarkCache, refresh, refreshBenchmark, showBenchmark]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
       clearCache();
       clearBenchmarkCache();
-      await Promise.all([refresh(), compareMode === 'sp500' ? refreshBenchmark() : Promise.resolve()]);
+      await Promise.all([refresh(), showBenchmark ? refreshBenchmark() : Promise.resolve()]);
       onRefreshComplete?.();
     } finally {
       setIsRefreshing(false);
     }
   };
 
-  const { chartData, stats } = useMemo(() => {
+  const { chartData, stats, gradientOffset } = useMemo(() => {
     if (!data || data.length === 0) {
-      return { chartData: [], stats: null };
+      return { chartData: [], stats: null, gradientOffset: 1 };
     }
 
     const now = new Date();
@@ -200,43 +202,49 @@ export function PortfolioHistoryChart({
     }
 
     const filtered = data.filter((d) => isAfter(parseISO(d.date), startDate));
-    if (filtered.length === 0) return { chartData: [], stats: null };
+    if (filtered.length === 0) return { chartData: [], stats: null, gradientOffset: 1 };
 
-    const benchmarkMap = new Map<string, number>();
+    const benchmarkMap = new Map<string, { returnPercent: number; value: number }>();
     if (benchmarkData.length > 0) {
       for (const bp of benchmarkData) {
-        benchmarkMap.set(bp.date, bp.benchmarkValue);
+        benchmarkMap.set(bp.date, {
+          returnPercent: bp.benchmarkReturnPercent,
+          value: bp.benchmarkValue,
+        });
       }
     }
 
     const chartPoints: ChartDataPoint[] = filtered.map((point) => {
-      const benchmarkValue = benchmarkMap.get(point.date);
+      const bm = benchmarkMap.get(point.date);
       return {
         date: format(parseISO(point.date), 'MMM d'),
         fullDate: point.date,
+        returnPercent: point.profitPercent,
         invested: point.totalCostBasis,
         marketValue: point.totalMarketValue,
-        profit: point.profit,
-        profitPercent: point.profitPercent,
-        benchmark: benchmarkValue,
-        alpha: benchmarkValue !== undefined
-          ? point.totalMarketValue - benchmarkValue
-          : undefined,
+        benchmarkReturnPercent: bm?.returnPercent,
+        benchmarkValue: bm?.value,
       };
     });
 
     const lastPoint = chartPoints[chartPoints.length - 1];
     const firstPoint = chartPoints[0];
 
+    const bmLast = benchmarkMap.get(lastPoint.fullDate);
+
     return {
       chartData: chartPoints,
+      gradientOffset: calculateGradientOffset(chartPoints),
       stats: {
-        periodChange: lastPoint.profitPercent,
-        periodAbsoluteChange: lastPoint.profit,
+        currentReturn: lastPoint.returnPercent,
         currentValue: lastPoint.marketValue,
         currentInvested: lastPoint.invested,
-        currentBenchmark: lastPoint.benchmark,
-        currentAlpha: lastPoint.alpha,
+        absoluteProfit: lastPoint.marketValue - lastPoint.invested,
+        benchmarkReturn: bmLast?.returnPercent,
+        benchmarkValue: bmLast?.value,
+        alphaPercent: bmLast !== undefined
+          ? lastPoint.returnPercent - bmLast.returnPercent
+          : undefined,
         startDate: firstPoint.fullDate,
         endDate: lastPoint.fullDate,
         daysCount: chartPoints.length,
@@ -244,7 +252,7 @@ export function PortfolioHistoryChart({
     };
   }, [data, benchmarkData, timeRange]);
 
-  const isPositive = stats ? stats.periodChange >= 0 : true;
+  const isPositive = stats ? stats.currentReturn >= 0 : true;
 
   const timeRanges: { key: TimeRange; label: string }[] = [
     { key: '1W', label: '1W' },
@@ -253,11 +261,6 @@ export function PortfolioHistoryChart({
     { key: '6M', label: '6M' },
     { key: '1Y', label: '1Y' },
     { key: 'ALL', label: 'All' },
-  ];
-
-  const compareModes: { key: CompareMode; label: string }[] = [
-    { key: 'cost-basis', label: 'vs Cost Basis' },
-    { key: 'sp500', label: 'vs S&P 500' },
   ];
 
   if (isLoading && data.length === 0) {
@@ -314,14 +317,14 @@ export function PortfolioHistoryChart({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
-                Portfolio History
+                Cumulative Return
                 {stats && (
                   <span className={`text-sm font-normal px-2 py-0.5 rounded ${
                     isPositive
                       ? 'bg-emerald-500/20 text-emerald-400'
                       : 'bg-rose-500/20 text-rose-400'
                   }`}>
-                    {isPositive ? '+' : ''}{stats.periodChange.toFixed(2)}%
+                    {isPositive ? '+' : ''}{stats.currentReturn.toFixed(2)}%
                   </span>
                 )}
               </CardTitle>
@@ -334,24 +337,19 @@ export function PortfolioHistoryChart({
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Compare Mode Toggle */}
-              <div className="flex bg-white/5 rounded-lg p-1">
-                {compareModes.map((mode) => (
-                  <Button
-                    key={mode.key}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCompareMode(mode.key)}
-                    className={`px-3 py-1 h-7 text-xs font-medium transition-all ${
-                      compareMode === mode.key
-                        ? 'bg-white/10 text-white'
-                        : 'text-white/40 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    {mode.label}
-                  </Button>
-                ))}
-              </div>
+              {/* S&P 500 Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowBenchmark((prev) => !prev)}
+                className={`px-3 py-1 h-7 text-xs font-medium transition-all rounded-lg ${
+                  showBenchmark
+                    ? 'bg-white/10 text-white'
+                    : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                vs S&P 500
+              </Button>
 
               {/* Time Range Buttons */}
               <div className="flex bg-white/5 rounded-lg p-1">
@@ -394,74 +392,51 @@ export function PortfolioHistoryChart({
         <CardContent className="pt-4">
           {/* Stats Grid */}
           {stats && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-              {compareMode === 'cost-basis' ? (
-                <>
-                  <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-white/40 text-xs mb-1">Invested</p>
-                    <p className="text-blue-400 font-semibold">
-                      {formatCurrency(stats.currentInvested)}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-white/40 text-xs mb-1">Current Value</p>
-                    <p className="text-white font-semibold">
-                      {formatCurrency(stats.currentValue)}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-white/40 text-xs mb-1">Total Profit</p>
-                    <p className={`font-semibold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {isPositive ? '+' : ''}{formatCurrency(stats.periodAbsoluteChange)}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-white/40 text-xs mb-1">Return</p>
-                    <p className={`font-semibold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {isPositive ? '+' : ''}{stats.periodChange.toFixed(2)}%
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-white/40 text-xs mb-1">My Portfolio</p>
-                    <p className="text-emerald-400 font-semibold">
-                      {formatCurrency(stats.currentValue)}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-white/40 text-xs mb-1">S&P 500 Benchmark</p>
-                    <p className="text-slate-400 font-semibold">
-                      {stats.currentBenchmark !== undefined ? formatCurrency(stats.currentBenchmark) : '—'}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-white/40 text-xs mb-1">Alpha</p>
-                    <p className={`font-semibold ${
-                      stats.currentAlpha !== undefined && stats.currentAlpha >= 0
-                        ? 'text-emerald-400'
-                        : 'text-rose-400'
-                    }`}>
-                      {stats.currentAlpha !== undefined
-                        ? `${stats.currentAlpha >= 0 ? '+' : ''}${formatCurrency(stats.currentAlpha)}`
-                        : '—'}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-white/40 text-xs mb-1">Return</p>
-                    <p className={`font-semibold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {isPositive ? '+' : ''}{stats.periodChange.toFixed(2)}%
-                    </p>
-                  </div>
-                </>
+            <div className={`grid gap-4 mb-6 ${showBenchmark ? 'grid-cols-2 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-4'}`}>
+              <div className="bg-white/5 rounded-lg p-3">
+                <p className="text-white/40 text-xs mb-1">Return</p>
+                <p className={`font-semibold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {isPositive ? '+' : ''}{stats.currentReturn.toFixed(2)}%
+                </p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-3">
+                <p className="text-white/40 text-xs mb-1">Current Value</p>
+                <p className="text-white font-semibold">
+                  {formatCurrency(stats.currentValue)}
+                </p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-3">
+                <p className="text-white/40 text-xs mb-1">Invested</p>
+                <p className="text-blue-400 font-semibold">
+                  {formatCurrency(stats.currentInvested)}
+                </p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-3">
+                <p className="text-white/40 text-xs mb-1">Profit / Loss</p>
+                <p className={`font-semibold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {stats.absoluteProfit >= 0 ? '+' : ''}{formatCurrency(stats.absoluteProfit)}
+                </p>
+              </div>
+              {showBenchmark && (
+                <div className="bg-white/5 rounded-lg p-3">
+                  <p className="text-white/40 text-xs mb-1">Alpha vs S&P</p>
+                  <p className={`font-semibold ${
+                    stats.alphaPercent !== undefined && stats.alphaPercent >= 0
+                      ? 'text-emerald-400'
+                      : 'text-rose-400'
+                  }`}>
+                    {stats.alphaPercent !== undefined
+                      ? `${stats.alphaPercent >= 0 ? '+' : ''}${stats.alphaPercent.toFixed(2)}pp`
+                      : '—'}
+                  </p>
+                </div>
               )}
             </div>
           )}
 
           {/* Chart */}
           <div className="h-75 relative">
-            {compareMode === 'sp500' && benchmarkLoading && (
+            {showBenchmark && benchmarkLoading && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 rounded-lg backdrop-blur-sm">
                 <div className="flex items-center gap-2 text-white/60">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -476,13 +451,18 @@ export function PortfolioHistoryChart({
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <defs>
-                  <linearGradient id="investedGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  {/* Split gradient: green above 0%, red below 0% */}
+                  <linearGradient id="splitGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
+                    <stop offset={`${gradientOffset * 100}%`} stopColor="#10b981" stopOpacity={0.05} />
+                    <stop offset={`${gradientOffset * 100}%`} stopColor="#f43f5e" stopOpacity={0.05} />
+                    <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.4} />
                   </linearGradient>
-                  <linearGradient id="marketValueGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  <linearGradient id="splitStroke" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset={`${gradientOffset * 100}%`} stopColor="#10b981" />
+                    <stop offset={`${gradientOffset * 100}%`} stopColor="#f43f5e" />
+                    <stop offset="100%" stopColor="#f43f5e" />
                   </linearGradient>
                 </defs>
 
@@ -505,44 +485,38 @@ export function PortfolioHistoryChart({
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(1)}k`}
+                  tickFormatter={(value) => `${value.toFixed(1)}%`}
                   domain={['auto', 'auto']}
-                  width={50}
+                  width={55}
                 />
 
-                <Tooltip content={<CustomTooltip compareMode={compareMode} />} />
+                {/* Zero reference line */}
+                <ReferenceLine
+                  y={0}
+                  stroke="rgba(255,255,255,0.15)"
+                  strokeDasharray="4 4"
+                  strokeWidth={1}
+                />
 
-                {/* Invested Capital Area — only in cost-basis mode */}
-                {compareMode === 'cost-basis' && (
-                  <Area
-                    type="monotone"
-                    dataKey="invested"
-                    name="Invested"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    fill="url(#investedGradient)"
-                    dot={false}
-                    activeDot={{ r: 4, fill: '#3b82f6' }}
-                  />
-                )}
+                <Tooltip content={<CustomTooltip showBenchmark={showBenchmark} />} />
 
-                {/* Market Value Area — always shown */}
+                {/* Portfolio Return % — split-colored area */}
                 <Area
                   type="monotone"
-                  dataKey="marketValue"
-                  name="Market Value"
-                  stroke="#10b981"
+                  dataKey="returnPercent"
+                  name="Return"
+                  stroke="url(#splitStroke)"
                   strokeWidth={2}
-                  fill="url(#marketValueGradient)"
+                  fill="url(#splitGradient)"
                   dot={false}
                   activeDot={{ r: 4, fill: '#10b981' }}
                 />
 
-                {/* Benchmark Dashed Line — only in sp500 mode */}
-                {compareMode === 'sp500' && (
+                {/* Benchmark Return % — dashed gray line */}
+                {showBenchmark && (
                   <Line
                     type="monotone"
-                    dataKey="benchmark"
+                    dataKey="benchmarkReturnPercent"
                     name="S&P 500"
                     stroke="#94a3b8"
                     strokeWidth={2}
@@ -556,7 +530,7 @@ export function PortfolioHistoryChart({
             </ResponsiveContainer>
           </div>
 
-          <CustomLegend compareMode={compareMode} />
+          <CustomLegend showBenchmark={showBenchmark} />
         </CardContent>
       </Card>
     </motion.div>
