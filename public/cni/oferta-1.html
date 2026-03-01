@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nowoczesny apartament w Pruszczu — Nieruchomości Andrysiak</title>
+  <meta name="description" content="Nowoczesny apartament 68 m² w Pruszczu Gdańskim. 3 pokoje, balkon, miejsce parkingowe. Sprawdź szczegóły oferty.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ====== DETAIL PAGE STYLES ====== */
+    .detail-hero {
+      position: relative;
+      height: 55vh;
+      min-height: 380px;
+      background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&h=900&fit=crop');
+      background-size: cover;
+      background-position: center;
+    }
+    .detail-hero__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(26,42,58,0.7) 0%, rgba(26,42,58,0.15) 50%);
+    }
+    .detail-hero__content {
+      position: absolute;
+      bottom: 50px;
+      left: 0;
+      right: 0;
+      z-index: 1;
+    }
+    .detail-hero__badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background-color: var(--color-gold);
+      color: var(--color-white);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 16px;
+    }
+    .detail-hero__title {
+      font-family: var(--font-heading);
+      font-size: 2.8rem;
+      color: var(--color-white);
+      line-height: 1.15;
+      margin-bottom: 8px;
+    }
+    .detail-hero__location {
+      color: rgba(255,255,255,0.7);
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .detail-hero__location svg {
+      flex-shrink: 0;
+    }
+
+    /* Stats bar */
+    .detail-stats {
+      background-color: var(--color-navy);
+      padding: 0;
+    }
+    .detail-stats__inner {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .detail-stats__item {
+      flex: 1;
+      min-width: 150px;
+      padding: 24px 30px;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+    .detail-stats__item:last-child {
+      border-right: none;
+    }
+    .detail-stats__value {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-gold);
+      margin-bottom: 4px;
+    }
+    .detail-stats__label {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.55);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    /* Content */
+    .detail-content {
+      padding: 80px 0 100px;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 60px;
+      align-items: start;
+    }
+    .detail-main h2 {
+      font-family: var(--font-heading);
+      font-size: 1.6rem;
+      color: var(--color-navy);
+      margin-bottom: 20px;
+      margin-top: 50px;
+    }
+    .detail-main h2:first-child {
+      margin-top: 0;
+    }
+    .detail-main p {
+      color: var(--color-text-light);
+      margin-bottom: 16px;
+      line-height: 1.85;
+    }
+
+    /* Features list */
+    .detail-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 30px;
+      margin: 24px 0;
+    }
+    .detail-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.95rem;
+      color: var(--color-text);
+    }
+    .detail-features svg {
+      color: var(--color-gold);
+      flex-shrink: 0;
+    }
+
+    /* Gallery grid */
+    .detail-gallery {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .detail-gallery img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+    }
+    .detail-gallery img:first-child {
+      grid-column: 1 / -1;
+      height: 360px;
+    }
+
+    /* Sidebar */
+    .detail-sidebar {
+      position: sticky;
+      top: 90px;
+    }
+    .detail-card {
+      background-color: var(--color-bg);
+      padding: 36px 30px;
+      border: 1px solid var(--color-border);
+    }
+    .detail-card__price-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--color-text-light);
+      margin-bottom: 6px;
+    }
+    .detail-card__price {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--color-navy);
+      margin-bottom: 6px;
+    }
+    .detail-card__price-m2 {
+      font-size: 0.88rem;
+      color: var(--color-text-light);
+      margin-bottom: 28px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .detail-card__agent {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .detail-card__agent img {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+    }
+    .detail-card__agent-name {
+      font-weight: 600;
+      color: var(--color-navy);
+      font-size: 0.95rem;
+    }
+    .detail-card__agent-role {
+      font-size: 0.82rem;
+      color: var(--color-text-light);
+    }
+    .detail-card .btn {
+      margin-bottom: 10px;
+    }
+    .detail-card__phone {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 36px;
+      border: 2px solid var(--color-navy);
+      color: var(--color-navy);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .detail-card__phone:hover {
+      background-color: var(--color-navy);
+      color: var(--color-white);
+    }
+    .detail-card__phone svg {
+      flex-shrink: 0;
+    }
+
+    /* Back link */
+    .detail-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 50px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--color-text-light);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .detail-back:hover {
+      color: var(--color-gold);
+    }
+
+    @media (max-width: 992px) {
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+      .detail-sidebar {
+        position: static;
+      }
+      .detail-hero__title {
+        font-size: 2rem;
+      }
+      .detail-gallery img:first-child {
+        height: 260px;
+      }
+      .detail-gallery img {
+        height: 180px;
+      }
+    }
+    @media (max-width: 768px) {
+      .detail-hero {
+        height: 40vh;
+        min-height: 280px;
+      }
+      .detail-hero__title {
+        font-size: 1.6rem;
+      }
+      .detail-hero__content {
+        bottom: 30px;
+      }
+      .detail-stats__item {
+        min-width: 50%;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+      .detail-features {
+        grid-template-columns: 1fr;
+      }
+      .detail-gallery {
+        grid-template-columns: 1fr;
+      }
+      .detail-gallery img,
+      .detail-gallery img:first-child {
+        height: 220px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ====== NAWIGACJA ====== -->
+  <nav class="nav" style="position: relative;">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">
+        <span class="nav__logo-text">Nieruchomości Andrysiak</span>
+      </a>
+      <button class="nav__hamburger" id="hamburger" aria-label="Otwórz menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav__links" id="navLinks">
+        <li><a href="oferty.html" style="color: var(--color-gold);">Oferty</a></li>
+        <li><a href="index.html#o-mnie">O mnie</a></li>
+        <li><a href="certyfikaty.html">Certyfikaty</a></li>
+        <li><a href="index.html#opinie">Opinie</a></li>
+        <li><a href="index.html#faq">FAQ</a></li>
+        <li><a href="index.html#kontakt">Kontakt</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ====== HERO ZDJECIE ====== -->
+  <section class="detail-hero">
+    <div class="detail-hero__overlay"></div>
+    <div class="detail-hero__content">
+      <div class="container">
+        <span class="detail-hero__badge">Na sprzedaż</span>
+        <h1 class="detail-hero__title">Nowoczesny apartament w Pruszczu</h1>
+        <p class="detail-hero__location">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ul. Kwiatowa 15, Pruszcz Gdański
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== STATYSTYKI ====== -->
+  <section class="detail-stats">
+    <div class="container">
+      <div class="detail-stats__inner">
+        <div class="detail-stats__item">
+          <p class="detail-stats__value">749 000 zł</p>
+          <p class="detail-stats__label">Cena</p>
+        </div>
+        <div class="detail-stats__item">
+          <p class="detail-stats__value">68 m²</p>
+          <p class="detail-stats__label">Powierzchnia</p>
+        </div>
+        <div class="detail-stats__item">
+          <p class="detail-stats__value">3</p>
+          <p class="detail-stats__label">Pokoje</p>
+        </div>
+        <div class="detail-stats__item">
+          <p class="detail-stats__value">2</p>
+          <p class="detail-stats__label">Piętro</p>
+        </div>
+        <div class="detail-stats__item">
+          <p class="detail-stats__value">2024</p>
+          <p class="detail-stats__label">Rok budowy</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="detail-content">
+    <div class="container">
+
+      <a href="oferty.html" class="detail-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Wróć do ofert
+      </a>
+
+      <div class="detail-grid">
+
+        <!-- ====== MAIN CONTENT ====== -->
+        <div class="detail-main">
+
+          <h2>Opis nieruchomości</h2>
+          <p>Zapraszam do zapoznania się z ofertą nowoczesnego, trzypokojowego apartamentu zlokalizowanego w nowej inwestycji deweloperskiej w Pruszczu Gdańskim. Nieruchomość idealnie nadaje się zarówno dla rodziny, jak i jako inwestycja pod wynajem.</p>
+          <p>Apartament o powierzchni 68 m² znajduje się na 2. piętrze kameralnego, czteropiętrowego budynku z windą. Budynek został oddany do użytku w 2024 roku i wykonany jest w wysokim standardzie z użyciem najwyższej jakości materiałów.</p>
+          <p>Układ mieszkania jest bardzo funkcjonalny: przestronny salon z aneksem kuchennym i wyjściem na duży balkon (8 m²), dwie niezależne sypialnie, łazienka z wanną i prysznicem oraz osobna toaleta. Mieszkanie jest wykończone w nowoczesnym stylu — jasne kolory, panele winylowe na podłogach, biała stolarka drzwiowa.</p>
+          <p>W cenie mieszkania miejsce postojowe w garażu podziemnym oraz komórka lokatorska. Budynek znajduje się w cichym, zielonym otoczeniu, z doskonałym dojazdem do Gdańska (15 minut samochodem do centrum).</p>
+
+          <h2>Cechy nieruchomości</h2>
+          <ul class="detail-features">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Balkon 8 m²
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Miejsce w garażu podziemnym
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Komórka lokatorska
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Winda
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Ogrzewanie miejskie
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Wykończenie pod klucz
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Osobna toaleta
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Ciche otoczenie
+            </li>
+          </ul>
+
+          <h2>Galeria</h2>
+          <div class="detail-gallery">
+            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&h=700&fit=crop" alt="Widok apartamentu z zewnątrz" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1600210492493-0946911123ea?w=600&h=400&fit=crop" alt="Salon z aneksem kuchennym" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop" alt="Sypialnia główna" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=600&h=400&fit=crop" alt="Łazienka" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1600585153490-76fb20a32601?w=600&h=400&fit=crop" alt="Widok z balkonu" loading="lazy">
+          </div>
+
+        </div>
+
+        <!-- ====== SIDEBAR ====== -->
+        <aside class="detail-sidebar">
+          <div class="detail-card">
+            <p class="detail-card__price-label">Cena</p>
+            <p class="detail-card__price">749 000 zł</p>
+            <p class="detail-card__price-m2">11 015 zł / m²</p>
+
+            <div class="detail-card__agent">
+              <img src="photos/CNI-zdj.webp" alt="Monika Andrysiak" style="width:56px;height:56px;object-fit:cover;">
+              <div>
+                <p class="detail-card__agent-name">Monika Andrysiak</p>
+                <p class="detail-card__agent-role">Pośrednik nieruchomości</p>
+              </div>
+            </div>
+
+            <a href="index.html#kontakt" class="btn btn--gold btn--full">Napisz wiadomość</a>
+            <a href="tel:+48513000000" class="detail-card__phone">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              +48 513 *** ***
+            </a>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="index.html" class="nav__logo">
+          <span class="nav__logo-text">Nieruchomości Andrysiak</span>
+        </a>
+        <p class="footer__desc">Nieruchomości Andrysiak — Monika Andrysiak. Pośrednictwo w obrocie nieruchomościami, pośrednictwo kredytowe. Pruszcz Gdański i okolice.</p>
+      </div>
+      <div class="footer__nav">
+        <h4>Nawigacja</h4>
+        <ul>
+          <li><a href="oferty.html">Oferty</a></li>
+          <li><a href="index.html#o-mnie">O mnie</a></li>
+          <li><a href="certyfikaty.html">Certyfikaty</a></li>
+          <li><a href="index.html#opinie">Opinie</a></li>
+          <li><a href="index.html#kontakt">Kontakt</a></li>
+        </ul>
+      </div>
+      <div class="footer__legal">
+        <h4>Informacje</h4>
+        <ul>
+          <li><a href="polityka-prywatnosci.html">Polityka Prywatności</a></li>
+          <li><a href="index.html#faq">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <p>&copy; 2026 Nieruchomości Andrysiak — Monika Andrysiak. Wszelkie prawa zastrzeżone.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

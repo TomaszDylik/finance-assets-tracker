@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certyfikaty i wyróżnienia — Nieruchomości Andrysiak</title>
+  <meta name="description" content="Certyfikaty, licencje i wyróżnienia Moniki Andrysiak — Pośrednika w Obrocie Nieruchomościami. Licencja PFRN nr 21387.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .page-hero {
+      background-color: var(--color-navy);
+      padding: 100px 0 60px;
+      text-align: center;
+    }
+    .page-hero .section-label {
+      color: var(--color-gold);
+    }
+    .page-hero .section-title {
+      color: var(--color-white);
+      margin-bottom: 12px;
+    }
+    .page-hero p {
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 1.05rem;
+    }
+
+    .cert-gallery {
+      padding: 70px 0 100px;
+      background-color: var(--color-bg);
+    }
+
+    .cert-gallery__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 30px;
+    }
+
+    .cert-gallery__item {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .cert-gallery__item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .cert-gallery__item img {
+      max-width: 100%;
+      max-height: 500px;
+      object-fit: contain;
+    }
+
+    /* ====== LIGHTBOX ====== */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.85);
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .lightbox.active {
+      display: flex;
+    }
+
+    .lightbox__img {
+      max-width: 90vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 4px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .lightbox__close {
+      position: absolute;
+      top: 24px;
+      right: 32px;
+      width: 48px;
+      height: 48px;
+      background: none;
+      border: 2px solid rgba(255,255,255,0.5);
+      color: var(--color-white);
+      font-size: 1.6rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      border-radius: 50%;
+    }
+
+    .lightbox__close:hover {
+      background: rgba(255,255,255,0.15);
+      border-color: var(--color-white);
+    }
+
+    .lightbox__nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 52px;
+      height: 52px;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.4);
+      color: var(--color-white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      border-radius: 50%;
+    }
+
+    .lightbox__nav:hover {
+      background: rgba(255,255,255,0.25);
+      border-color: var(--color-white);
+    }
+
+    .lightbox__prev {
+      left: 24px;
+    }
+
+    .lightbox__next {
+      right: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .cert-gallery__grid {
+        grid-template-columns: 1fr;
+      }
+      .lightbox__nav {
+        width: 40px;
+        height: 40px;
+      }
+      .lightbox__prev {
+        left: 10px;
+      }
+      .lightbox__next {
+        right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ====== NAWIGACJA ====== -->
+  <nav class="nav" style="position: relative;">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">
+        <span class="nav__logo-text">Nieruchomości Andrysiak</span>
+      </a>
+      <button class="nav__hamburger" id="hamburger" aria-label="Otwórz menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav__links" id="navLinks">
+        <li><a href="oferty.html">Oferty</a></li>
+        <li><a href="index.html#o-mnie">O mnie</a></li>
+        <li><a href="certyfikaty.html" style="color: var(--color-gold);">Certyfikaty</a></li>
+        <li><a href="index.html#opinie">Opinie</a></li>
+        <li><a href="index.html#faq">FAQ</a></li>
+        <li><a href="index.html#kontakt">Kontakt</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ====== PAGE HERO ====== -->
+  <section class="page-hero">
+    <div class="container">
+      <p class="section-label">Certyfikaty i wyróżnienia</p>
+      <h1 class="section-title">Moje kwalifikacje</h1>
+      <p>Licencje, certyfikaty i wyróżnienia potwierdzające wieloletnie doświadczenie</p>
+    </div>
+  </section>
+
+  <!-- ====== GALERIA CERTYFIKATÓW ====== -->
+  <section class="cert-gallery">
+    <div class="container">
+      <div class="cert-gallery__grid">
+
+        <div class="cert-gallery__item" data-index="0">
+          <img src="photos/1005772.png" alt="Certyfikat" loading="lazy">
+        </div>
+
+        <div class="cert-gallery__item" data-index="1">
+          <img src="photos/doc01749920260207131612_001.jpg" alt="Certyfikat" loading="lazy">
+        </div>
+
+        <div class="cert-gallery__item" data-index="2">
+          <img src="photos/doc01750720260207133612_001.jpg" alt="Certyfikat" loading="lazy">
+        </div>
+
+        <div class="cert-gallery__item" data-index="3">
+          <img src="photos/doc01750920260207143903_001.jpg" alt="Certyfikat" loading="lazy">
+        </div>
+
+        <div class="cert-gallery__item" data-index="4">
+          <img src="photos/list gratulacyjny (3).png" alt="List gratulacyjny" loading="lazy">
+        </div>
+
+        <div class="cert-gallery__item" data-index="5">
+          <img src="photos/Logo Brylant Polskiej Przedsiębiorczości.jpg" alt="Brylant Polskiej Przedsiębiorczości" loading="lazy">
+        </div>
+
+        <div class="cert-gallery__item" data-index="6">
+          <img src="photos/logo_pl_200.png" alt="Logo PFRN" loading="lazy">
+        </div>
+
+        <div class="cert-gallery__item" data-index="7">
+          <img src="photos/IMG_8871.jpeg" alt="Certyfikat dodatkowy" loading="lazy">
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== LIGHTBOX ====== -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox__close" id="lightboxClose" aria-label="Zamknij">&times;</button>
+    <button class="lightbox__nav lightbox__prev" id="lightboxPrev" aria-label="Poprzedni">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <img class="lightbox__img" id="lightboxImg" src="" alt="Certyfikat — powiększenie">
+    <button class="lightbox__nav lightbox__next" id="lightboxNext" aria-label="Następny">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="index.html" class="nav__logo">
+          <span class="nav__logo-text">Nieruchomości Andrysiak</span>
+        </a>
+        <p class="footer__desc">Nieruchomości Andrysiak — Monika Andrysiak. Pośrednictwo w obrocie nieruchomościami, pośrednictwo kredytowe. Pruszcz Gdański i okolice.</p>
+      </div>
+      <div class="footer__nav">
+        <h4>Nawigacja</h4>
+        <ul>
+          <li><a href="oferty.html">Oferty</a></li>
+          <li><a href="index.html#o-mnie">O mnie</a></li>
+          <li><a href="certyfikaty.html">Certyfikaty</a></li>
+          <li><a href="index.html#kontakt">Kontakt</a></li>
+        </ul>
+      </div>
+      <div class="footer__legal">
+        <h4>Informacje</h4>
+        <ul>
+          <li><a href="polityka-prywatnosci.html">Polityka Prywatności</a></li>
+          <li><a href="index.html#faq">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <p>&copy; 2026 Nieruchomości Andrysiak — Monika Andrysiak. Wszelkie prawa zastrzeżone.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    (function() {
+      'use strict';
+      var lightbox = document.getElementById('lightbox');
+      var lightboxImg = document.getElementById('lightboxImg');
+      var items = document.querySelectorAll('.cert-gallery__item');
+      var images = [];
+      var currentIndex = 0;
+
+      items.forEach(function(item) {
+        var img = item.querySelector('img');
+        images.push(img.src);
+      });
+
+      items.forEach(function(item) {
+        item.addEventListener('click', function() {
+          currentIndex = parseInt(this.dataset.index, 10);
+          lightboxImg.src = images[currentIndex];
+          lightbox.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        });
+      });
+
+      document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+      lightbox.addEventListener('click', function(e) {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      document.getElementById('lightboxPrev').addEventListener('click', function(e) {
+        e.stopPropagation();
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+        lightboxImg.src = images[currentIndex];
+      });
+
+      document.getElementById('lightboxNext').addEventListener('click', function(e) {
+        e.stopPropagation();
+        currentIndex = (currentIndex + 1) % images.length;
+        lightboxImg.src = images[currentIndex];
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (!lightbox.classList.contains('active')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') {
+          currentIndex = (currentIndex - 1 + images.length) % images.length;
+          lightboxImg.src = images[currentIndex];
+        }
+        if (e.key === 'ArrowRight') {
+          currentIndex = (currentIndex + 1) % images.length;
+          lightboxImg.src = images[currentIndex];
+        }
+      });
+
+      function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    })();
+  </script>
+</body>
+</html>

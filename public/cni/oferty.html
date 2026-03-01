@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wszystkie oferty — Nieruchomości Andrysiak</title>
+  <meta name="description" content="Aktualne oferty nieruchomości na sprzedaż. Mieszkania, domy i lokale w Trójmieście i okolicach.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .page-hero {
+      background-color: var(--color-navy);
+      padding: 100px 0 60px;
+      text-align: center;
+    }
+    .page-hero .section-label {
+      color: var(--color-gold);
+    }
+    .page-hero .section-title {
+      color: var(--color-white);
+      margin-bottom: 12px;
+    }
+    .page-hero p {
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 1.05rem;
+    }
+    .offers-page {
+      padding: 70px 0 100px;
+      background-color: var(--color-bg);
+    }
+    .offers-page .offers__grid {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ====== NAWIGACJA ====== -->
+  <nav class="nav" style="position: relative;">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__logo">
+        <span class="nav__logo-text">Nieruchomości Andrysiak</span>
+      </a>
+      <button class="nav__hamburger" id="hamburger" aria-label="Otwórz menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav__links" id="navLinks">
+        <li><a href="oferty.html" style="color: var(--color-gold);">Oferty</a></li>
+        <li><a href="index.html#o-mnie">O mnie</a></li>
+        <li><a href="certyfikaty.html">Certyfikaty</a></li>
+        <li><a href="index.html#opinie">Opinie</a></li>
+        <li><a href="index.html#faq">FAQ</a></li>
+        <li><a href="index.html#kontakt">Kontakt</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ====== PAGE HERO ====== -->
+  <section class="page-hero">
+    <div class="container">
+      <p class="section-label">Oferty</p>
+      <h1 class="section-title">Wszystkie nieruchomości</h1>
+      <p>Aktualne oferty na sprzedaż w Trójmieście i okolicach</p>
+    </div>
+  </section>
+
+  <!-- ====== OFERTY GRID ====== -->
+  <section class="offers-page">
+    <div class="container">
+      <div class="offers__grid">
+
+        <!-- 1 -->
+        <a href="oferta-1.html" class="card-link">
+        <article class="card">
+          <div class="card__image-wrap">
+            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop" alt="Nowoczesny apartament" class="card__image" loading="lazy">
+            <span class="card__badge">Na sprzedaż</span>
+            <span class="card__badge card__badge--promo">★ Tylko u mnie</span>
+          </div>
+          <div class="card__body">
+            <p class="card__price">749 000 zł</p>
+            <h3 class="card__title">Nowoczesny apartament w Pruszczu</h3>
+            <div class="card__meta">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                68 m²
+              </span>
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                3 pokoje
+              </span>
+            </div>
+          </div>
+        </article>
+        </a>
+
+        <!-- 2 -->
+        <article class="card">
+          <div class="card__image-wrap">
+            <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop" alt="Dom z ogrodem" class="card__image" loading="lazy">
+            <span class="card__badge">Na sprzedaż</span>
+            <span class="card__badge card__badge--promo">★ Tylko u mnie</span>
+          </div>
+          <div class="card__body">
+            <p class="card__price">1 290 000 zł</p>
+            <h3 class="card__title">Elegancki dom z ogrodem — Gdańsk</h3>
+            <div class="card__meta">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                142 m²
+              </span>
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                5 pokoi
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 3 -->
+        <article class="card">
+          <div class="card__image-wrap">
+            <img src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&h=400&fit=crop" alt="Mieszkanie Sopot" class="card__image" loading="lazy">
+            <span class="card__badge">Na sprzedaż</span>
+            <span class="card__badge card__badge--promo">★ Tylko u mnie</span>
+          </div>
+          <div class="card__body">
+            <p class="card__price">529 000 zł</p>
+            <h3 class="card__title">Słoneczne mieszkanie — Sopot</h3>
+            <div class="card__meta">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                52 m²
+              </span>
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                2 pokoje
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 4 -->
+        <article class="card">
+          <div class="card__image-wrap">
+            <img src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=600&h=400&fit=crop" alt="Penthouse Gdynia" class="card__image" loading="lazy">
+            <span class="card__badge">Na sprzedaż</span>
+          </div>
+          <div class="card__body">
+            <p class="card__price">1 850 000 zł</p>
+            <h3 class="card__title">Luksusowy penthouse — Gdynia Orłowo</h3>
+            <div class="card__meta">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                115 m²
+              </span>
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                4 pokoje
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 5 -->
+        <article class="card">
+          <div class="card__image-wrap">
+            <img src="https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=600&h=400&fit=crop" alt="Mieszkanie Wrzeszcz" class="card__image" loading="lazy">
+            <span class="card__badge">Na sprzedaż</span>
+          </div>
+          <div class="card__body">
+            <p class="card__price">465 000 zł</p>
+            <h3 class="card__title">Kawalerka z balkonem — Gdańsk Wrzeszcz</h3>
+            <div class="card__meta">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                35 m²
+              </span>
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                1 pokój
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 6 -->
+        <article class="card">
+          <div class="card__image-wrap">
+            <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=600&h=400&fit=crop" alt="Dom bliźniak" class="card__image" loading="lazy">
+            <span class="card__badge">Na sprzedaż</span>
+          </div>
+          <div class="card__body">
+            <p class="card__price">890 000 zł</p>
+            <h3 class="card__title">Dom bliźniak z garażem — Rumia</h3>
+            <div class="card__meta">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                120 m²
+              </span>
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                4 pokoje
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 7 -->
+        <article class="card">
+          <div class="card__image-wrap">
+            <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=600&h=400&fit=crop" alt="Apartament Jelitkowo" class="card__image" loading="lazy">
+            <span class="card__badge">Na sprzedaż</span>
+          </div>
+          <div class="card__body">
+            <p class="card__price">1 150 000 zł</p>
+            <h3 class="card__title">Apartament blisko plaży — Jelitkowo</h3>
+            <div class="card__meta">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                85 m²
+              </span>
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                3 pokoje
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 8 -->
+        <article class="card">
+          <div class="card__image-wrap">
+            <img src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&h=400&fit=crop" alt="Lokal usługowy" class="card__image" loading="lazy">
+            <span class="card__badge">Na sprzedaż</span>
+          </div>
+          <div class="card__body">
+            <p class="card__price">620 000 zł</p>
+            <h3 class="card__title">Lokal usługowy w centrum — Gdańsk</h3>
+            <div class="card__meta">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                75 m²
+              </span>
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                2 pomieszcz.
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <!-- 9 -->
+        <article class="card">
+          <div class="card__image-wrap">
+            <img src="https://images.unsplash.com/photo-1600607687644-aaca4c3eeeae?w=600&h=400&fit=crop" alt="Rezydencja Sopot" class="card__image" loading="lazy">
+            <span class="card__badge">Na sprzedaż</span>
+          </div>
+          <div class="card__body">
+            <p class="card__price">3 200 000 zł</p>
+            <h3 class="card__title">Rezydencja z basenem — Sopot Górny</h3>
+            <div class="card__meta">
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                280 m²
+              </span>
+              <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                7 pokoi
+              </span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+
+      <div class="offers__cta" style="margin-top: 60px;">
+        <a href="index.html#kontakt" class="btn btn--gold">Zapytaj o nieruchomość</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="index.html" class="nav__logo">
+          <span class="nav__logo-text">Nieruchomości Andrysiak</span>
+        </a>
+        <p class="footer__desc">Nieruchomości Andrysiak — Monika Andrysiak. Pośrednictwo w obrocie nieruchomościami, pośrednictwo kredytowe. Pruszcz Gdański i okolice.</p>
+      </div>
+      <div class="footer__nav">
+        <h4>Nawigacja</h4>
+        <ul>
+          <li><a href="oferty.html">Oferty</a></li>
+          <li><a href="index.html#o-mnie">O mnie</a></li>
+          <li><a href="certyfikaty.html">Certyfikaty</a></li>
+          <li><a href="index.html#opinie">Opinie</a></li>
+          <li><a href="index.html#kontakt">Kontakt</a></li>
+        </ul>
+      </div>
+      <div class="footer__legal">
+        <h4>Informacje</h4>
+        <ul>
+          <li><a href="polityka-prywatnosci.html">Polityka Prywatności</a></li>
+          <li><a href="index.html#faq">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <p>&copy; 2026 Nieruchomości Andrysiak — Monika Andrysiak. Wszelkie prawa zastrzeżone.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

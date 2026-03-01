@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nieruchomości Andrysiak — Monika Andrysiak</title>
+  <meta name="description" content="Nieruchomości Andrysiak — Monika Andrysiak. Pośrednictwo w obrocie nieruchomościami, pośrednictwo kredytowe. Pruszcz Gdański i okolice.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ====== NAWIGACJA (fixed) ====== -->
+  <nav class="nav" id="navbar">
+    <div class="nav__inner">
+      <a href="#hero" class="nav__logo">
+        <span class="nav__logo-text">Nieruchomości Andrysiak</span>
+      </a>
+      <button class="nav__hamburger" id="hamburger" aria-label="Otwórz menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav__links" id="navLinks">
+        <li><a href="oferty.html">Oferty</a></li>
+        <li><a href="#o-mnie">O mnie</a></li>
+        <li><a href="certyfikaty.html">Certyfikaty</a></li>
+        <li><a href="#opinie">Opinie</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#kontakt">Kontakt</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ====== HERO ====== -->
+  <header class="hero" id="hero">
+    <div class="hero__overlay"></div>
+    <div class="hero__content">
+      <h1 class="hero__title">Nieruchomości Andrysiak<br></h1>
+      <p class="hero__subtitle">Znajdę dla Ciebie miejsce, które pokochasz.</p>
+      <div class="hero__buttons">
+        <a href="oferty.html" class="btn btn--gold">Zobacz oferty</a>
+        <a href="#o-mnie" class="btn btn--outline">O mnie</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ====== O MNIE ====== -->
+    <section class="about" id="o-mnie">
+      <div class="container about__grid">
+        <div class="about__image-wrap">
+          <img src="photos/CNI-zdj.webp" alt="Monika Andrysiak — Pośrednik nieruchomości" class="about__image" loading="lazy">
+        </div>
+        <div class="about__text">
+          <p class="section-label">O mnie</p>
+          <h2 class="section-title">Monika Andrysiak</h2>
+          <div class="about__stats">
+            <div class="about__stat"><span class="about__stat-number">2</span><span class="about__stat-label">miasta</span></div>
+            <div class="about__stat"><span class="about__stat-number">3</span><span class="about__stat-label">nieruchomości na sprzedaż</span></div>
+          </div>
+          <p>Od kilkunastu lat z powodzeniem zajmuję się kompleksowo sprzedażą i wynajmem nieruchomości. To co mnie wyróżnia to wieloletnie doświadczenie, skuteczność, sumienność i jakość obsługi klienta. Pośrednictwo w obrocie nieruchomościami, pośrednictwo kredytowe.</p>
+          <p><strong>Pośrednik w Obrocie Nieruchomościami — Monika Andrysiak</strong><br>Licencja Zawodowa Nr 21387 Polskiej Federacji Rynku Nieruchomości</p>
+          <div class="about__buttons">
+            <a href="#kontakt" class="btn btn--gold">Skontaktuj się</a>
+            <a href="certyfikaty.html" class="btn btn--outline-dark">Certyfikaty</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== OFERTY ====== -->
+    <section class="offers" id="oferty">
+      <div class="container">
+        <p class="section-label">Aktualne oferty</p>
+        <h2 class="section-title">Promowane nieruchomości</h2>
+        <div class="offers__grid">
+
+          <a href="oferta-1.html" class="card-link">
+          <article class="card">
+            <div class="card__image-wrap">
+              <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&h=400&fit=crop" alt="Nowoczesny apartament" class="card__image" loading="lazy">
+              <span class="card__badge">Na sprzedaż</span>
+              <span class="card__badge card__badge--promo">★ Tylko u mnie</span>
+            </div>
+            <div class="card__body">
+              <p class="card__price">749 000 zł</p>
+              <h3 class="card__title">Nowoczesny apartament w Pruszczu</h3>
+              <div class="card__meta">
+                <span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                  68 m²
+                </span>
+                <span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  3 pokoje
+                </span>
+              </div>
+            </div>
+          </article>
+          </a>
+
+          <article class="card">
+            <div class="card__image-wrap">
+              <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop" alt="Dom jednorodzinny" class="card__image" loading="lazy">
+              <span class="card__badge">Na sprzedaż</span>
+              <span class="card__badge card__badge--promo">★ Tylko u mnie</span>
+            </div>
+            <div class="card__body">
+              <p class="card__price">1 290 000 zł</p>
+              <h3 class="card__title">Elegancki dom z ogrodem — Gdańsk</h3>
+              <div class="card__meta">
+                <span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                  142 m²
+                </span>
+                <span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  5 pokoi
+                </span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card__image-wrap">
+              <img src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&h=400&fit=crop" alt="Mieszkanie z widokiem" class="card__image" loading="lazy">
+              <span class="card__badge">Na sprzedaż</span>
+              <span class="card__badge card__badge--promo">★ Tylko u mnie</span>
+            </div>
+            <div class="card__body">
+              <p class="card__price">529 000 zł</p>
+              <h3 class="card__title">Słoneczne mieszkanie — Sopot</h3>
+              <div class="card__meta">
+                <span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="0"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                  52 m²
+                </span>
+                <span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  2 pokoje
+                </span>
+              </div>
+            </div>
+          </article>
+
+        </div>
+        <div class="offers__cta">
+          <a href="oferty.html" class="btn btn--gold">Zobacz wszystkie oferty</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== OPINIE ====== -->
+    <section class="testimonials" id="opinie">
+      <div class="container">
+        <p class="section-label">Opinie klientów</p>
+        <h2 class="section-title">Co mówią o współpracy</h2>
+        <div class="carousel">
+          <button class="carousel__btn carousel__btn--prev" aria-label="Poprzednia opinia">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="carousel__track">
+
+            <blockquote class="carousel__slide carousel__slide--active">
+              <p class="carousel__text">"Pani Monika przeprowadziła nas przez cały proces zakupu mieszkania z niesamowitą cierpliwością i profesjonalizmem. Zawsze dostępna, zawsze z uśmiechem. Gorąco polecam!"</p>
+              <footer class="carousel__author">
+                <strong>Marta i Piotr Nowak</strong>
+                <span>Kupno mieszkania, Gdańsk</span>
+              </footer>
+            </blockquote>
+
+            <blockquote class="carousel__slide">
+              <p class="carousel__text">"Sprzedaż mojego domu trwała zaledwie 3 tygodnie. Profesjonalne zdjęcia, świetna strategia marketingowa i doskonała komunikacja. Cena finalna przekroczyła moje oczekiwania."</p>
+              <footer class="carousel__author">
+                <strong>Krzysztof Wiśniewski</strong>
+                <span>Sprzedaż domu, Pruszcz Gdański</span>
+              </footer>
+            </blockquote>
+
+            <blockquote class="carousel__slide">
+              <p class="carousel__text">"Jako osoba kupująca pierwszą nieruchomość, miałam mnóstwo pytań i obaw. Pani Monika wyjaśniła wszystko w sposób jasny i zrozumiały. Znalazła dla mnie idealne mieszkanie w moim budżecie."</p>
+              <footer class="carousel__author">
+                <strong>Aleksandra Kamińska</strong>
+                <span>Kupno mieszkania, Sopot</span>
+              </footer>
+            </blockquote>
+
+            <blockquote class="carousel__slide">
+              <p class="carousel__text">"Współpraca na najwyższym poziomie. Pani Monika pomogła mi w inwestycji w lokal usługowy. Jej znajomość rynku i umiejętność negocjacji były kluczowe dla sukcesu transakcji."</p>
+              <footer class="carousel__author">
+                <strong>Tomasz Zieliński</strong>
+                <span>Zakup lokalu usługowego, Gdynia</span>
+              </footer>
+            </blockquote>
+
+          </div>
+          <button class="carousel__btn carousel__btn--next" aria-label="Następna opinia">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <div class="carousel__dots" id="carouselDots"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== FAQ ====== -->
+    <section class="faq" id="faq">
+      <div class="container">
+        <p class="section-label">FAQ</p>
+        <h2 class="section-title">Najczęściej zadawane pytania</h2>
+        <div class="faq__list">
+
+          <details class="faq__item">
+            <summary class="faq__question">Jak wygląda proces współpracy przy sprzedaży nieruchomości?</summary>
+            <div class="faq__answer">
+              <p>Współpracę rozpoczynamy od bezpłatnej wyceny i oględzin nieruchomości. Następnie przygotowuję profesjonalną sesję zdjęciową, opis oferty i strategię marketingową. Zajmuję się prezentacjami, negocjacjami oraz kompletowaniem dokumentów aż do momentu podpisania aktu notarialnego.</p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__question">Czy pobierasz prowizję od kupującego?</summary>
+            <div class="faq__answer">
+              <p>Nie. Moja prowizja jest ustalana indywidualnie ze stroną sprzedającą i jest zawarta w umowie pośrednictwa. Kupujący nie ponosi żadnych dodatkowych kosztów z tytułu mojego pośrednictwa.</p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__question">Czy pomagasz w uzyskaniu kredytu hipotecznego?</summary>
+            <div class="faq__answer">
+              <p>Tak, współpracuję z zaufanymi doradcami kredytowymi, którzy pomogą Ci znaleźć najlepszą ofertę kredytową dopasowaną do Twojej sytuacji finansowej. Usługa doradztwa kredytowego jest bezpłatna dla moich klientów.</p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__question">Na jakim terenie działasz?</summary>
+            <div class="faq__answer">
+              <p>Działam głównie na terenie Trójmiasta (Gdańsk, Sopot, Gdynia) oraz w okolicznych miejscowościach, takich jak Pruszcz Gdański, Rumia, Reda czy Wejherowo. W przypadku wyjątkowych nieruchomości obsługuję również klientów z całego Pomorza.</p>
+            </div>
+          </details>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== KONTAKT ====== -->
+    <section class="contact" id="kontakt">
+      <div class="container contact__grid">
+        <div class="contact__info">
+          <p class="section-label">Kontakt</p>
+          <h2 class="section-title">Porozmawiajmy</h2>
+          <p>Masz pytania lub chcesz umówić się na spotkanie? Skontaktuj się ze mną — odpowiem najszybciej jak to możliwe.</p>
+          <ul class="contact__details">
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <a href="tel:+48513000000">+48 513 *** ***</a>
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <a href="mailto:kontakt@cni-nieruchomosci.pl">kontakt@cni-nieruchomosci.pl</a>
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Pruszcz Gdański, ul. Czesława Miłosza 14L6/B</span>
+            </li>
+          </ul>
+        </div>
+        <div class="contact__form-wrap">
+          <form class="contact__form" id="contactForm" action="#" method="POST">
+            <div class="form-group">
+              <label for="name">Imię <span class="form-optional">(opcjonalne)</span></label>
+              <input type="text" id="name" name="name" placeholder="Twoje imię">
+            </div>
+            <div class="form-group">
+              <label for="email">E-mail <span class="form-required">*</span></label>
+              <input type="email" id="email" name="email" placeholder="Twój adres e-mail" required>
+            </div>
+            <div class="form-group">
+              <label for="phone">Telefon <span class="form-required">*</span></label>
+              <input type="tel" id="phone" name="phone" placeholder="Twój numer telefonu" required>
+            </div>
+            <div class="form-group">
+              <label for="topic">Temat</label>
+              <select id="topic" name="topic">
+                <option value="" disabled selected>Wybierz temat</option>
+                <option value="sprzedaz">Sprzedaż nieruchomości</option>
+                <option value="kupno">Kupno nieruchomości</option>
+                <option value="porada">Porada / Konsultacja</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="message">Wiadomość</label>
+              <textarea id="message" name="message" rows="5" placeholder="Opisz krótko, w czym mogę pomóc..."></textarea>
+            </div>
+            <div class="form-group form-group--checkbox">
+              <input type="checkbox" id="consent" name="consent" required>
+              <label for="consent">Wyrażam zgodę na przetwarzanie moich danych osobowych zgodnie z <a href="polityka-prywatnosci.html" target="_blank">Polityką Prywatności</a>. <span class="form-required">*</span></label>
+            </div>
+            <button type="submit" class="btn btn--gold btn--full">Wyślij wiadomość</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== CERTYFIKATY (Marquee) ====== -->
+    <section class="certificates" id="certyfikaty">
+      <div class="container">
+        <p class="section-label" style="text-align:center;">Certyfikaty i wyróżnienia</p>
+        <h2 class="section-title" style="text-align:center;">Moje kwalifikacje</h2>
+      </div>
+      <div class="marquee">
+        <div class="marquee__track">
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/1005772.png" alt="Certyfikat" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/doc01749920260207131612_001.jpg" alt="Certyfikat" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/doc01750720260207133612_001.jpg" alt="Certyfikat" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/doc01750920260207143903_001.jpg" alt="Certyfikat" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/list gratulacyjny (3).png" alt="List gratulacyjny" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/Logo Brylant Polskiej Przedsiębiorczości.jpg" alt="Brylant Polskiej Przedsiębiorczości" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/logo_pl_200.png" alt="Logo PFRN" loading="lazy"></a></div>
+          <!-- Duplikat dla płynnej pętli -->
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/1005772.png" alt="Certyfikat" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/doc01749920260207131612_001.jpg" alt="Certyfikat" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/doc01750720260207133612_001.jpg" alt="Certyfikat" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/doc01750920260207143903_001.jpg" alt="Certyfikat" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/list gratulacyjny (3).png" alt="List gratulacyjny" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/Logo Brylant Polskiej Przedsiębiorczości.jpg" alt="Brylant Polskiej Przedsiębiorczości" loading="lazy"></a></div>
+          <div class="marquee__item"><a href="certyfikaty.html"><img src="photos/logo_pl_200.png" alt="Logo PFRN" loading="lazy"></a></div>
+        </div>
+      </div>
+      <div class="offers__cta" style="margin-top: 30px;">
+        <a href="certyfikaty.html" class="btn btn--gold">Zobacz wszystkie certyfikaty</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="#hero" class="nav__logo">
+          <span class="nav__logo-text">Nieruchomości Andrysiak</span>
+        </a>
+        <p class="footer__desc">Nieruchomości Andrysiak — Monika Andrysiak. Pośrednictwo w obrocie nieruchomościami, pośrednictwo kredytowe. Pruszcz Gdański i okolice.</p>
+      </div>
+      <div class="footer__nav">
+        <h4>Nawigacja</h4>
+        <ul>
+          <li><a href="oferty.html">Oferty</a></li>
+          <li><a href="#o-mnie">O mnie</a></li>
+          <li><a href="certyfikaty.html">Certyfikaty</a></li>
+          <li><a href="#opinie">Opinie</a></li>
+          <li><a href="#kontakt">Kontakt</a></li>
+        </ul>
+      </div>
+      <div class="footer__legal">
+        <h4>Informacje</h4>
+        <ul>
+          <li><a href="polityka-prywatnosci.html">Polityka Prywatności</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <p>&copy; 2026 Nieruchomości Andrysiak — Monika Andrysiak. Wszelkie prawa zastrzeżone.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
