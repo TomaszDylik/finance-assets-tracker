@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { format, addDays, isBefore, isAfter, startOfDay } from 'date-fns';
 import { getBenchmarkHistory } from '@/lib/yahoo';
 import type { Transaction } from '@/types';
@@ -70,6 +70,14 @@ export function useBenchmarkData(
     [transactions],
   );
 
+  // Stable identity for buy transactions
+  const buyTxKey = useMemo(
+    () => buyTransactions.map(t => t.id).join(','),
+    [buyTransactions]
+  );
+  const buyTxRef = useRef(buyTransactions);
+  useEffect(() => { buyTxRef.current = buyTransactions; }, [buyTransactions]);
+
   const earliestDate = useMemo(() => {
     if (!buyTransactions.length) return null;
     return startOfDay(new Date(buyTransactions[0].transaction_date));
@@ -81,7 +89,7 @@ export function useBenchmarkData(
       const today = startOfDay(new Date());
 
       const txByDate = new Map<string, { amountPLN: number }[]>();
-      for (const tx of buyTransactions) {
+      for (const tx of buyTxRef.current) {
         const txDate = format(new Date(tx.transaction_date), 'yyyy-MM-dd');
         const amountPLN =
           Number(tx.quantity) * Number(tx.price_per_share) * Number(tx.exchange_rate_to_pln);
@@ -131,7 +139,8 @@ export function useBenchmarkData(
 
       return result;
     },
-    [buyTransactions],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [buyTxKey],
   );
 
   const loadBenchmarkData = useCallback(
@@ -183,7 +192,7 @@ export function useBenchmarkData(
         setIsLoading(false);
       }
     },
-    [enabled, earliestDate, buyTransactions, buildBenchmarkSeries],
+    [enabled, earliestDate, buyTxKey, buildBenchmarkSeries],
   );
 
   useEffect(() => {

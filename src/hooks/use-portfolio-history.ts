@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { format, addDays, isBefore, isAfter, parseISO, startOfDay } from 'date-fns';
 import type { Transaction } from '@/types';
 
@@ -44,6 +44,31 @@ export function clearPortfolioCache(): void {
   localStorage.removeItem(CACHE_KEY);
 }
 
+// Pure helper functions — defined outside the hook to avoid re-creation
+function mapToRecord(
+  map: Map<string, Array<{ date: string; price: number }>>,
+): Record<string, Record<string, number>> {
+  const record: Record<string, Record<string, number>> = {};
+  for (const [ticker, prices] of map.entries()) {
+    record[ticker] = {};
+    for (const { date, price } of prices) {
+      record[ticker][date] = price;
+    }
+  }
+  return record;
+}
+
+function mergePriceRecords(
+  existing: Record<string, Record<string, number>>,
+  newData: Record<string, Record<string, number>>,
+): Record<string, Record<string, number>> {
+  const merged = { ...existing };
+  for (const [ticker, prices] of Object.entries(newData)) {
+    merged[ticker] = { ...merged[ticker], ...prices };
+  }
+  return merged;
+}
+
 type FetchHistoricalFn = (
   tickers: string[],
   startDate: Date,
@@ -58,17 +83,28 @@ export function usePortfolioHistory(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Stable transaction identity — only recalculate when IDs/count change, not on every reference change
+  const transactionsKey = useMemo(
+    () => transactions.map(t => t.id).sort().join(','),
+    [transactions]
+  );
+  const transactionsRef = useRef(transactions);
+  useEffect(() => { transactionsRef.current = transactions; }, [transactions]);
+
   const getEarliestTransactionDate = useCallback((): Date | null => {
-    if (!transactions.length) return null;
-    const sorted = [...transactions].sort(
+    const txs = transactionsRef.current;
+    if (!txs.length) return null;
+    const sorted = [...txs].sort(
       (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime(),
     );
     return startOfDay(new Date(sorted[0].transaction_date));
-  }, [transactions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactionsKey]);
 
   const getUniqueTickers = useCallback(
-    (): string[] => [...new Set(transactions.map((t) => t.ticker))],
-    [transactions],
+    (): string[] => [...new Set(transactionsRef.current.map((t) => t.ticker))],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [transactionsKey],
   );
 
   const buildPortfolioData = useCallback(
@@ -79,7 +115,7 @@ export function usePortfolioHistory(
       const holdings = new Map<string, { quantity: number; costBasis: number; avgRate: number }>();
       const lastKnownPrices = new Map<string, number>();
 
-      const sortedTx = [...transactions].sort(
+      const sortedTx = [...transactionsRef.current].sort(
         (a, b) => new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime(),
       );
 
@@ -152,36 +188,13 @@ export function usePortfolioHistory(
 
       return result;
     },
-    [transactions],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [transactionsKey],
   );
-
-  const mapToRecord = (
-    map: Map<string, Array<{ date: string; price: number }>>,
-  ): Record<string, Record<string, number>> => {
-    const record: Record<string, Record<string, number>> = {};
-    for (const [ticker, prices] of map.entries()) {
-      record[ticker] = {};
-      for (const { date, price } of prices) {
-        record[ticker][date] = price;
-      }
-    }
-    return record;
-  };
-
-  const mergePriceRecords = (
-    existing: Record<string, Record<string, number>>,
-    newData: Record<string, Record<string, number>>,
-  ): Record<string, Record<string, number>> => {
-    const merged = { ...existing };
-    for (const [ticker, prices] of Object.entries(newData)) {
-      merged[ticker] = { ...merged[ticker], ...prices };
-    }
-    return merged;
-  };
 
   const loadPortfolioData = useCallback(
     async (forceRefresh = false) => {
-      if (!transactions.length) {
+      if (!transactionsRef.current.length) {
         setData([]);
         setIsLoading(false);
         return;
@@ -234,7 +247,7 @@ export function usePortfolioHistory(
         setIsLoading(false);
       }
     },
-    [transactions, getEarliestTransactionDate, getUniqueTickers, buildPortfolioData, fetchHistoricalPrices],
+    [transactionsKey, getEarliestTransactionDate, getUniqueTickers, buildPortfolioData, fetchHistoricalPrices],
   );
 
   useEffect(() => {

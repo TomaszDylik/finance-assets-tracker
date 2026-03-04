@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,7 +36,10 @@ import { getPortfolioSnapshots, savePortfolioSnapshot } from "@/actions/portfoli
 import { getMultipleQuotes, getMultipleExchangeRates } from "@/lib/yahoo";
 import { calculateHoldings, updateHoldingWithLiveData, calculatePortfolioSummary } from "@/lib/calculations";
 import { clearPortfolioCache } from "@/hooks";
-import type { Holding, Currency, Transaction } from "@/types";
+import type { Holding, Currency, Transaction, ClosedPosition } from "@/types";
+
+const EMPTY_TRANSACTIONS: Transaction[] = [];
+const EMPTY_CLOSED_POSITIONS: ClosedPosition[] = [];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -63,7 +66,7 @@ export default function DashboardPage() {
 
   // Fetch transactions
   const {
-    data: transactions = [],
+    data: transactions = EMPTY_TRANSACTIONS,
     isLoading: transactionsLoading,
     error: transactionsError,
     refetch: refetchTransactions,
@@ -79,6 +82,7 @@ export default function DashboardPage() {
     data: snapshots = [],
     isLoading: snapshotsLoading,
     refetch: refetchSnapshots,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } = useQuery({
     queryKey: ["portfolio-snapshots"],
     queryFn: getPortfolioSnapshots,
@@ -88,7 +92,7 @@ export default function DashboardPage() {
 
   // Fetch closed positions for realized P/L section
   const {
-    data: closedPositions = [],
+    data: closedPositions = EMPTY_CLOSED_POSITIONS,
     isLoading: closedPositionsLoading,
     refetch: refetchClosedPositions,
   } = useQuery({
@@ -98,39 +102,46 @@ export default function DashboardPage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Calculate holdings from transactions
-  const holdings = calculateHoldings(transactions);
-  const tickers = holdings.map((h) => h.ticker);
-  const currencies = [...new Set(holdings.map((h) => h.original_currency).filter((c) => c !== "PLN"))];
+  // Calculate holdings from transactions (memoized)
+  const holdings = useMemo(() => calculateHoldings(transactions), [transactions]);
+  const tickers = useMemo(() => holdings.map((h) => h.ticker), [holdings]);
+  const currencies = useMemo(
+    () => [...new Set(holdings.map((h) => h.original_currency).filter((c) => c !== "PLN"))],
+    [holdings]
+  );
 
-  // Fetch live quotes
+  // Stable JSON keys so React Query doesn't see new references every render
+  const tickersKey = useMemo(() => JSON.stringify(tickers), [tickers]);
+  const currenciesKey = useMemo(() => JSON.stringify(currencies), [currencies]);
+
+  // Fetch live quotes (stable key via tickersKey)
   const {
     data: quotesMap,
     isLoading: quotesLoading,
     refetch: refetchQuotes,
     isFetching: quotesRefetching,
   } = useQuery({
-    queryKey: ["quotes", tickers],
+    queryKey: ["quotes", tickersKey],
     queryFn: () => getMultipleQuotes(tickers),
     enabled: tickers.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch exchange rates
+  // Fetch exchange rates (stable key via currenciesKey)
   const {
     data: exchangeRatesMap,
     isLoading: ratesLoading,
     refetch: refetchRates,
     isFetching: ratesRefetching,
   } = useQuery({
-    queryKey: ["exchange-rates", currencies],
+    queryKey: ["exchange-rates", currenciesKey],
     queryFn: () => getMultipleExchangeRates(currencies as Currency[]),
     enabled: currencies.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Combine holdings with live data
-  const holdingsWithLiveData: Holding[] = holdings.map((holding) => {
+  // Combine holdings with live data (memoized)
+  const holdingsWithLiveData: Holding[] = useMemo(() => holdings.map((holding) => {
     const quote = quotesMap?.get(holding.ticker);
     const exchangeRate = holding.original_currency === "PLN" 
       ? 1 
@@ -140,48 +151,52 @@ export default function DashboardPage() {
       return updateHoldingWithLiveData(holding, quote.price, exchangeRate, quote.changePercent);
     }
     return holding;
-  });
+  }), [holdings, quotesMap, exchangeRatesMap]);
 
-  // Calculate portfolio summary from holdings
-  const portfolioSummary = calculatePortfolioSummary(holdingsWithLiveData, closedPositions);
+  // Calculate portfolio summary from holdings (memoized)
+  const portfolioSummary = useMemo(
+    () => calculatePortfolioSummary(holdingsWithLiveData, closedPositions),
+    [holdingsWithLiveData, closedPositions]
+  );
 
   // Auto-save portfolio snapshot once per day when data is available
+  // Uses a ref to prevent saving more than once per page load
+  const snapshotSavedRef = useRef(false);
   useEffect(() => {
-    const saveSnapshot = async () => {
-      if (
-        portfolioSummary.totalValuePLN > 0 &&
-        !quotesLoading &&
-        !ratesLoading &&
-        holdingsWithLiveData.length > 0
-      ) {
-        try {
-          await savePortfolioSnapshot(
-            portfolioSummary.totalValuePLN,
-            portfolioSummary.totalInvestedPLN,
-            portfolioSummary.totalReturnPLN
-          );
-          // Refresh snapshots to show new data
-          queryClient.invalidateQueries({ queryKey: ["portfolio-snapshots"] });
-        } catch (error) {
-          // Silent fail - snapshot saving should not disrupt user experience
-          console.error("Failed to save portfolio snapshot:", error);
-        }
-      }
-    };
+    if (snapshotSavedRef.current) return;
+    if (quotesLoading || ratesLoading) return;
+    if (portfolioSummary.totalValuePLN <= 0) return;
+    if (holdingsWithLiveData.length === 0) return;
 
-    saveSnapshot();
-  }, [portfolioSummary.totalValuePLN, quotesLoading, ratesLoading, holdingsWithLiveData.length, queryClient]);
+    snapshotSavedRef.current = true;
+
+    savePortfolioSnapshot(
+      portfolioSummary.totalValuePLN,
+      portfolioSummary.totalInvestedPLN,
+      portfolioSummary.totalReturnPLN
+    ).catch((error) => {
+      console.error("Failed to save portfolio snapshot:", error);
+      snapshotSavedRef.current = false; // allow retry on next render
+    });
+    // Intentionally NOT invalidating portfolio-snapshots here to avoid a
+    // refetch → re-render → save loop that was causing the sluggishness.
+  }, [portfolioSummary.totalValuePLN, portfolioSummary.totalInvestedPLN, portfolioSummary.totalReturnPLN, quotesLoading, ratesLoading, holdingsWithLiveData.length]);
+
+  // Stable mutation callbacks to avoid recreating mutations per render
+  const invalidateAll = useCallback(async () => {
+    await Promise.all([
+      refetchTransactions(),
+      refetchSnapshots(),
+      refetchClosedPositions(),
+    ]);
+    clearPortfolioCache();
+  }, [refetchTransactions, refetchSnapshots, refetchClosedPositions]);
 
   // Add transaction mutation
   const addTransactionMutation = useMutation({
     mutationFn: addTransaction,
     onSuccess: async () => {
-      await Promise.all([
-        refetchTransactions(),
-        refetchSnapshots(),
-        refetchClosedPositions(),
-      ]);
-      clearPortfolioCache();
+      await invalidateAll();
       setIsAddModalOpen(false);
       toast.success("Transaction added successfully");
     },
@@ -194,12 +209,7 @@ export default function DashboardPage() {
   const deleteAllMutation = useMutation({
     mutationFn: (ticker: string) => deleteAllTransactionsForTicker(ticker),
     onSuccess: async () => {
-      await Promise.all([
-        refetchTransactions(),
-        refetchSnapshots(),
-        refetchClosedPositions(),
-      ]);
-      clearPortfolioCache();
+      await invalidateAll();
       toast.success("All transactions deleted for this asset");
     },
     onError: (error) => {
@@ -211,12 +221,7 @@ export default function DashboardPage() {
   const deleteAllPortfolioMutation = useMutation({
     mutationFn: deleteAllTransactions,
     onSuccess: async () => {
-      await Promise.all([
-        refetchTransactions(),
-        refetchSnapshots(),
-        refetchClosedPositions(),
-      ]);
-      clearPortfolioCache();
+      await invalidateAll();
       toast.success("Portfolio cleared — all transactions deleted");
     },
     onError: (error) => {
@@ -229,12 +234,7 @@ export default function DashboardPage() {
     mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateTransaction>[1] }) =>
       updateTransaction(id, data),
     onSuccess: async () => {
-      await Promise.all([
-        refetchTransactions(),
-        refetchSnapshots(),
-        refetchClosedPositions(),
-      ]);
-      clearPortfolioCache();
+      await invalidateAll();
       setEditTransaction(null);
       toast.success("Transaction updated successfully");
     },
@@ -247,12 +247,7 @@ export default function DashboardPage() {
   const deleteTransactionMutation = useMutation({
     mutationFn: deleteTransaction,
     onSuccess: async () => {
-      await Promise.all([
-        refetchTransactions(),
-        refetchSnapshots(),
-        refetchClosedPositions(),
-      ]);
-      clearPortfolioCache();
+      await invalidateAll();
       toast.success("Transaction deleted successfully");
     },
     onError: (error) => {
@@ -273,32 +268,32 @@ export default function DashboardPage() {
   });
 
   // Handle edit transaction
-  const handleEditTransaction = (holding: Holding, transactionId: string) => {
+  const handleEditTransaction = useCallback((holding: Holding, transactionId: string) => {
     const tx = holding.transactions.find(t => t.id === transactionId);
     if (tx) {
       setEditTransaction(tx);
     }
-  };
+  }, []);
 
   // Handle delete single transaction
-  const handleDeleteTransaction = (holding: Holding, transactionId: string) => {
+  const handleDeleteTransaction = useCallback((holding: Holding, transactionId: string) => {
     const tx = holding.transactions.find(t => t.id === transactionId);
     if (tx && window.confirm(`Delete this ${tx.transaction_type} transaction for ${tx.ticker}?\n${tx.quantity} shares @ ${tx.currency} ${tx.price_per_share}\nThis cannot be undone.`)) {
       deleteTransactionMutation.mutate(transactionId);
     }
-  };
+  }, [deleteTransactionMutation]);
 
   // Refresh handler
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     await Promise.all([refetchQuotes(), refetchRates()]);
     toast.success("Data refreshed");
-  };
+  }, [refetchQuotes, refetchRates]);
 
   // Sign out handler
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await signOut();
     router.push("/");
-  };
+  }, [signOut, router]);
 
   // Loading state
   if (authLoading) {
