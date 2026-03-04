@@ -74,41 +74,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, fetchProfile]);
 
   useEffect(() => {
+    let mounted = true;
+
     const initAuth = async () => {
       try {
-        const { data: { session: initial } } = await supabase.auth.getSession();
-        if (initial) {
-          setSession(initial);
-          setUser(initial.user);
-          const profileData = await fetchProfile(initial.user.id);
-          setProfile(profileData);
+        // Use getUser() for reliable server verification (getSession() returns stale cached data)
+        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+        
+        if (error || !currentUser) {
+          // No valid session — clear everything
+          if (mounted) {
+            setUser(null);
+            setSession(null);
+            setProfile(null);
+          }
+          return;
+        }
+
+        // Fetch session only after confirming user is valid
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+
+        if (mounted) {
+          setSession(currentSession);
+          setUser(currentUser);
+          const profileData = await fetchProfile(currentUser.id);
+          if (mounted) setProfile(profileData);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+        if (mounted) {
+          setUser(null);
+          setSession(null);
+          setProfile(null);
+        }
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     };
 
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
+      async (event, newSession) => {
+        if (!mounted) return;
+
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
         if (newSession?.user) {
           const profileData = await fetchProfile(newSession.user.id);
-          setProfile(profileData);
+          if (mounted) setProfile(profileData);
         } else {
           setProfile(null);
         }
 
-        setIsLoading(false);
+        // Only update loading on sign-in/sign-out events, not on token refresh
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          setIsLoading(false);
+        }
       },
     );
 
-    return () => { subscription.unsubscribe(); };
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [supabase.auth, fetchProfile]);
 
   const signIn = async (email: string, password: string) => {

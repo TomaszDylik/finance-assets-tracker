@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -14,11 +14,18 @@ import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, user, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +40,7 @@ export default function LoginPage() {
         toast.error('Login failed', { description: signInError.message });
       } else {
         toast.success('Welcome back!');
+        router.refresh(); // Refresh server state so middleware sees the new session
         router.push('/dashboard');
       }
     } catch {
@@ -41,6 +49,15 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking auth state, or redirecting authenticated user
+  if (authLoading || user) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">

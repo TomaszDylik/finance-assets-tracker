@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -13,8 +13,8 @@ import { useAuth } from '@/providers';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
-  useRouter(); // Keep for potential redirects
-  const { signUp } = useAuth();
+  const router = useRouter();
+  const { signUp, user, isLoading: authLoading } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,6 +22,13 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +89,15 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking auth state, or redirecting authenticated user
+  if (authLoading || user) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
 
   if (success) {
     return (
