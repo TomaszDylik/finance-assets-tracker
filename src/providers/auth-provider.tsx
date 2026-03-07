@@ -78,11 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initAuth = async () => {
       try {
-        // Use getUser() for reliable server verification (getSession() returns stale cached data)
-        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
-        
-        if (error || !currentUser) {
-          // No valid session — clear everything
+        // Fast path: check local session first (instant, reads from cookies/storage)
+        const { data: { session: localSession } } = await supabase.auth.getSession();
+
+        // No local session → user is definitely not logged in → skip slow getUser() call
+        if (!localSession) {
           if (mounted) {
             setUser(null);
             setSession(null);
@@ -91,11 +91,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        // Fetch session only after confirming user is valid
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        // Slow path (only for users with an existing session):
+        // Verify token validity with the server
+        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+
+        if (error || !currentUser) {
+          if (mounted) {
+            setUser(null);
+            setSession(null);
+            setProfile(null);
+          }
+          return;
+        }
 
         if (mounted) {
-          setSession(currentSession);
+          setSession(localSession);
           setUser(currentUser);
           const profileData = await fetchProfile(currentUser.id);
           if (mounted) setProfile(profileData);

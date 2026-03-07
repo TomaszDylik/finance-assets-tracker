@@ -7,6 +7,19 @@ const AUTH_ROUTES = ['/login', '/register'];
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
+  // Fast path: if visiting auth routes (login/register) and no auth cookies exist,
+  // skip the expensive getUser() round-trip to Supabase entirely
+  const isAuthRoute = AUTH_ROUTES.some((route) =>
+    request.nextUrl.pathname.startsWith(route),
+  );
+  const hasAuthCookies = request.cookies.getAll().some(
+    (c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
+  );
+
+  if (isAuthRoute && !hasAuthCookies) {
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
