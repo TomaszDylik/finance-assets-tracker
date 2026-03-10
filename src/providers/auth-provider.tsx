@@ -73,53 +73,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchProfile]);
 
-  const applyVerifiedAuthState = useCallback(async (nextSession: Session | null) => {
-    const { data: { user: verifiedUser }, error } = await supabase.auth.getUser();
-
-    if (error || !verifiedUser) {
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      return;
-    }
-
-    setSession(nextSession);
-    setUser(verifiedUser);
-
-    const profileData = await fetchProfile(verifiedUser.id);
-    setProfile(profileData);
-  }, [fetchProfile, supabase]);
+  const clearAuthState = useCallback(() => {
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
 
     const initAuth = async () => {
       try {
-        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
 
-        if (error || !currentUser) {
+        if (error) {
           if (mounted) {
-            setUser(null);
-            setSession(null);
-            setProfile(null);
+            clearAuthState();
           }
           return;
         }
 
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-
         if (mounted) {
           setSession(currentSession);
-          setUser(currentUser);
-          const profileData = await fetchProfile(currentUser.id);
-          if (mounted) setProfile(profileData);
+          setUser(currentSession?.user ?? null);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
         if (mounted) {
-          setUser(null);
-          setSession(null);
-          setProfile(null);
+          clearAuthState();
         }
       } finally {
         if (mounted) setIsLoading(false);
@@ -129,31 +110,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (event, newSession) => {
         if (!mounted) return;
 
         if (event === 'SIGNED_OUT' || !newSession) {
-          setSession(null);
-          setUser(null);
-          setProfile(null);
+          clearAuthState();
           setIsLoading(false);
           return;
         }
 
-        try {
-          await applyVerifiedAuthState(newSession);
-        } catch (error) {
-          console.error('Error syncing auth state:', error);
-          if (mounted) {
-            setSession(null);
-            setUser(null);
-            setProfile(null);
-          }
-        } finally {
-          if (mounted) {
-            setIsLoading(false);
-          }
-        }
+        setSession(newSession);
+        setUser(newSession.user ?? null);
+        setIsLoading(false);
       },
     );
 
@@ -161,7 +129,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [applyVerifiedAuthState, fetchProfile, supabase]);
+  }, [clearAuthState, supabase]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncProfile = async () => {
+      if (!user) {
+        setProfile(null);
+        return;
+      }
+
+      const profileData = await fetchProfile(user.id);
+      if (!cancelled) {
+        setProfile(profileData);
+      }
+    };
+
+    syncProfile().catch((error) => {
+      console.error('Error syncing profile:', error);
+      if (!cancelled) {
+        setProfile(null);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchProfile, user]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
