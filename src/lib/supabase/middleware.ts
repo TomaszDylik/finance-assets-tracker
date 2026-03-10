@@ -13,7 +13,7 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route),
   );
   const hasAuthCookies = request.cookies.getAll().some(
-    (c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
+    (c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'),
   );
 
   if (isAuthRoute && !hasAuthCookies) {

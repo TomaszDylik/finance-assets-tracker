@@ -14,6 +14,8 @@ export interface PortfolioDataPoint {
 
 interface CacheData {
   lastUpdated: string;
+  userId: string;
+  transactionSignature: string;
   data: PortfolioDataPoint[];
   priceHistory: Record<string, Record<string, number>>;
 }
@@ -85,9 +87,22 @@ export function usePortfolioHistory(
 
   // Stable transaction identity — only recalculate when IDs/count change, not on every reference change
   const transactionsKey = useMemo(
-    () => transactions.map(t => t.id).sort().join(','),
-    [transactions]
+    () => transactions
+      .map((transaction) => [
+        transaction.id,
+        transaction.updated_at,
+        transaction.transaction_date,
+        transaction.ticker,
+        transaction.transaction_type,
+        transaction.quantity,
+        transaction.price_per_share,
+        transaction.exchange_rate_to_pln,
+      ].join(':'))
+      .sort()
+      .join('|'),
+    [transactions],
   );
+  const userId = useMemo(() => transactions[0]?.user_id ?? 'anonymous', [transactions]);
   const transactionsRef = useRef(transactions);
   useEffect(() => { transactionsRef.current = transactions; }, [transactions]);
 
@@ -217,8 +232,12 @@ export function usePortfolioHistory(
 
         let priceHistory: Record<string, Record<string, number>> = {};
         let fetchStartDate = earliestDate;
+        const isCacheValid =
+          cache?.userId === userId &&
+          cache?.transactionSignature === transactionsKey &&
+          !!cache.priceHistory;
 
-        if (!forceRefresh && cache?.priceHistory) {
+        if (!forceRefresh && isCacheValid && cache?.priceHistory) {
           const lastUpdatedDate = parseISO(cache.lastUpdated);
 
           if (format(lastUpdatedDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
@@ -238,7 +257,13 @@ export function usePortfolioHistory(
 
         const portfolioData = buildPortfolioData(earliestDate, today, priceHistory);
 
-        saveCache({ lastUpdated: format(today, 'yyyy-MM-dd'), data: portfolioData, priceHistory });
+        saveCache({
+          lastUpdated: format(today, 'yyyy-MM-dd'),
+          userId,
+          transactionSignature: transactionsKey,
+          data: portfolioData,
+          priceHistory,
+        });
         setData(portfolioData);
       } catch (err) {
         console.error('Failed to load portfolio history:', err);
@@ -247,7 +272,7 @@ export function usePortfolioHistory(
         setIsLoading(false);
       }
     },
-    [transactionsKey, getEarliestTransactionDate, getUniqueTickers, buildPortfolioData, fetchHistoricalPrices],
+    [transactionsKey, userId, getEarliestTransactionDate, getUniqueTickers, buildPortfolioData, fetchHistoricalPrices],
   );
 
   useEffect(() => {

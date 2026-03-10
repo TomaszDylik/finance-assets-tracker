@@ -73,26 +73,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchProfile]);
 
+  const applyVerifiedAuthState = useCallback(async (nextSession: Session | null) => {
+    const { data: { user: verifiedUser }, error } = await supabase.auth.getUser();
+
+    if (error || !verifiedUser) {
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      return;
+    }
+
+    setSession(nextSession);
+    setUser(verifiedUser);
+
+    const profileData = await fetchProfile(verifiedUser.id);
+    setProfile(profileData);
+  }, [fetchProfile, supabase]);
+
   useEffect(() => {
     let mounted = true;
 
     const initAuth = async () => {
       try {
-        // Fast path: check local session first (instant, reads from cookies/storage)
-        const { data: { session: localSession } } = await supabase.auth.getSession();
-
-        // No local session → user is definitely not logged in → skip slow getUser() call
-        if (!localSession) {
-          if (mounted) {
-            setUser(null);
-            setSession(null);
-            setProfile(null);
-          }
-          return;
-        }
-
-        // Slow path (only for users with an existing session):
-        // Verify token validity with the server
         const { data: { user: currentUser }, error } = await supabase.auth.getUser();
 
         if (error || !currentUser) {
@@ -104,8 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+
         if (mounted) {
-          setSession(localSession);
+          setSession(currentSession);
           setUser(currentUser);
           const profileData = await fetchProfile(currentUser.id);
           if (mounted) setProfile(profileData);
@@ -128,19 +132,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, newSession) => {
         if (!mounted) return;
 
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-
-        if (newSession?.user) {
-          const profileData = await fetchProfile(newSession.user.id);
-          if (mounted) setProfile(profileData);
-        } else {
+        if (event === 'SIGNED_OUT' || !newSession) {
+          setSession(null);
+          setUser(null);
           setProfile(null);
+          setIsLoading(false);
+          return;
         }
 
-        // Only update loading on sign-in/sign-out events, not on token refresh
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-          setIsLoading(false);
+        try {
+          await applyVerifiedAuthState(newSession);
+        } catch (error) {
+          console.error('Error syncing auth state:', error);
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setProfile(null);
+          }
+        } finally {
+          if (mounted) {
+            setIsLoading(false);
+          }
         }
       },
     );
@@ -149,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase.auth, fetchProfile]);
+  }, [applyVerifiedAuthState, fetchProfile, supabase]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });

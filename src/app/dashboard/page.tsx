@@ -45,17 +45,15 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, signOut, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  const userQueryScope = user?.id ?? 'guest';
+  const transactionsQueryKey = ['transactions', userQueryScope] as const;
+  const snapshotsQueryKey = ['portfolio-snapshots', userQueryScope] as const;
+  const closedPositionsQueryKey = ['closed-positions', userQueryScope] as const;
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editTransaction, setEditTransaction] = useState<Transaction | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding());
   const [showManual, setShowManual] = useState(false);
-
-  useEffect(() => {
-    if (!hasSeenOnboarding()) {
-      setShowOnboarding(true);
-    }
-  }, []);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -71,7 +69,7 @@ export default function DashboardPage() {
     error: transactionsError,
     refetch: refetchTransactions,
   } = useQuery({
-    queryKey: ["transactions"],
+    queryKey: transactionsQueryKey,
     queryFn: getTransactions,
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -79,12 +77,10 @@ export default function DashboardPage() {
 
   // Fetch portfolio snapshots for chart
   const {
-    data: snapshots = [],
     isLoading: snapshotsLoading,
     refetch: refetchSnapshots,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } = useQuery({
-    queryKey: ["portfolio-snapshots"],
+    queryKey: snapshotsQueryKey,
     queryFn: getPortfolioSnapshots,
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
@@ -96,7 +92,7 @@ export default function DashboardPage() {
     isLoading: closedPositionsLoading,
     refetch: refetchClosedPositions,
   } = useQuery({
-    queryKey: ["closed-positions"],
+    queryKey: closedPositionsQueryKey,
     queryFn: getClosedPositions,
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
@@ -428,7 +424,7 @@ export default function DashboardPage() {
                   : "An error occurred"}
               </p>
               <Button
-                onClick={() => queryClient.invalidateQueries({ queryKey: ["transactions"] })}
+                onClick={() => queryClient.invalidateQueries({ queryKey: transactionsQueryKey })}
                 className="bg-white/10 hover:bg-white/20"
               >
                 Try Again
@@ -450,7 +446,7 @@ export default function DashboardPage() {
               <PortfolioHistoryChart 
                 transactions={transactions}
                 onRefreshComplete={() => {
-                  queryClient.invalidateQueries({ queryKey: ["portfolio-snapshots"] });
+                  queryClient.invalidateQueries({ queryKey: snapshotsQueryKey });
                   toast.success("Historical data refreshed!");
                 }}
               />

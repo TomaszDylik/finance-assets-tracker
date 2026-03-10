@@ -6,7 +6,6 @@
 // Shows complete history of all transactions including sold positions
 
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import {
   History,
@@ -182,15 +181,11 @@ export function TransactionHistory({ transactions, onEdit, onDelete }: Transacti
 
       {/* Transactions List */}
       <div className="space-y-2">
-        <AnimatePresence>
-          {displayTransactions.map((transaction) => (
-            <motion.div
-              key={transaction.id}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="bg-white/5 rounded-lg p-4 hover:bg-white/[0.07] transition-colors group"
-            >
+        {displayTransactions.map((transaction) => (
+          <div
+            key={transaction.id}
+            className="bg-white/5 rounded-lg p-4 hover:bg-white/[0.07] transition-colors group"
+          >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
                   <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
@@ -285,9 +280,8 @@ export function TransactionHistory({ transactions, onEdit, onDelete }: Transacti
                   )}
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+          </div>
+        ))}
       </div>
 
       {/* No results */}

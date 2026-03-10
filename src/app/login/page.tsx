@@ -40,8 +40,7 @@ export default function LoginPage() {
         toast.error('Login failed', { description: signInError.message });
       } else {
         toast.success('Welcome back!');
-        router.refresh(); // Refresh server state so middleware sees the new session
-        router.push('/dashboard');
+        window.location.assign('/dashboard');
       }
     } catch {
       setError('An unexpected error occurred');

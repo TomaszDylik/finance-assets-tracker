@@ -4,7 +4,6 @@
 // Asset Card Component (Mobile View)
 // ===========================================
 
-import { motion } from 'framer-motion';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -38,22 +37,17 @@ interface AssetCardProps {
   holding: Holding;
   onDelete?: (ticker: string) => void;
   onEdit?: (holding: Holding, transactionId: string) => void;
-  index: number;
 }
 
-export function AssetCard({ holding, onDelete, onEdit, index }: AssetCardProps) {
+export function AssetCard({ holding, onDelete, onEdit }: AssetCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const isProfit = (holding.total_return_pln ?? 0) >= 0;
   const isDayPositive = (holding.day_change_percent ?? 0) >= 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-    >
-      <Card className="bg-white/3 border-white/10 backdrop-blur-xl overflow-hidden">
+    <div>
+      <Card className="bg-white/[0.035] border-white/10 overflow-hidden">
         <CardContent className="p-0">
           {/* Main Content */}
           <div
@@ -234,12 +228,7 @@ export function AssetCard({ holding, onDelete, onEdit, index }: AssetCardProps) 
 
           {/* Expanded Transaction History */}
           {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="border-t border-white/5"
-            >
+            <div className="border-t border-white/5">
               <div className="p-4 bg-black/20">
                 <h4 className="text-sm font-medium text-white/60 mb-3">
                   Transaction History
@@ -292,10 +281,10 @@ export function AssetCard({ holding, onDelete, onEdit, index }: AssetCardProps) 
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }

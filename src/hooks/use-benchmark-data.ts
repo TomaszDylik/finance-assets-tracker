@@ -16,6 +16,8 @@ const BENCHMARK_CACHE_KEY = 'benchmark_history_cache';
 
 interface BenchmarkCache {
   lastUpdated: string;
+  userId: string;
+  transactionSignature: string;
   prices: Record<string, number>;
 }
 
@@ -72,9 +74,19 @@ export function useBenchmarkData(
 
   // Stable identity for buy transactions
   const buyTxKey = useMemo(
-    () => buyTransactions.map(t => t.id).join(','),
-    [buyTransactions]
+    () => buyTransactions
+      .map((transaction) => [
+        transaction.id,
+        transaction.updated_at,
+        transaction.transaction_date,
+        transaction.quantity,
+        transaction.price_per_share,
+        transaction.exchange_rate_to_pln,
+      ].join(':'))
+      .join('|'),
+    [buyTransactions],
   );
+  const userId = useMemo(() => buyTransactions[0]?.user_id ?? 'anonymous', [buyTransactions]);
   const buyTxRef = useRef(buyTransactions);
   useEffect(() => { buyTxRef.current = buyTransactions; }, [buyTransactions]);
 
@@ -145,7 +157,7 @@ export function useBenchmarkData(
 
   const loadBenchmarkData = useCallback(
     async (forceRefresh = false) => {
-      if (!enabled || !earliestDate || buyTransactions.length === 0) {
+      if (!enabled || !earliestDate || !buyTxKey) {
         setData([]);
         setIsLoading(false);
         return;
@@ -159,8 +171,12 @@ export function useBenchmarkData(
         const cache = getCache();
         let priceByDate: Record<string, number> = {};
         let fetchStart = earliestDate;
+        const isCacheValid =
+          cache?.userId === userId &&
+          cache?.transactionSignature === buyTxKey &&
+          !!cache.prices;
 
-        if (!forceRefresh && cache?.prices) {
+        if (!forceRefresh && isCacheValid && cache?.prices) {
           const lastUpdated = cache.lastUpdated;
           if (lastUpdated === format(today, 'yyyy-MM-dd')) {
             priceByDate = cache.prices;
@@ -181,7 +197,12 @@ export function useBenchmarkData(
           }
         }
 
-        saveCache({ lastUpdated: format(today, 'yyyy-MM-dd'), prices: priceByDate });
+        saveCache({
+          lastUpdated: format(today, 'yyyy-MM-dd'),
+          userId,
+          transactionSignature: buyTxKey,
+          prices: priceByDate,
+        });
 
         const series = buildBenchmarkSeries(earliestDate, today, priceByDate);
         setData(series);
@@ -192,7 +213,7 @@ export function useBenchmarkData(
         setIsLoading(false);
       }
     },
-    [enabled, earliestDate, buyTxKey, buildBenchmarkSeries],
+    [enabled, earliestDate, userId, buyTxKey, buildBenchmarkSeries],
   );
 
   useEffect(() => {

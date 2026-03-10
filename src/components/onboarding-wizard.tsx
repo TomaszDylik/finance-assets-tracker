@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Globe, BarChart3, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
+import { Globe, BarChart3, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 
 const ONBOARDING_KEY = 'hasSeenOnboarding';
 

@@ -5,7 +5,6 @@
 // ===========================================
 
 import { useState, Fragment } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp,
   TrendingDown,
@@ -87,7 +86,7 @@ export function AssetTable({
   };
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/2 backdrop-blur-xl overflow-hidden">
+    <div className="rounded-xl border border-white/10 bg-white/[0.025] overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="border-white/10 hover:bg-transparent">
@@ -127,7 +126,7 @@ export function AssetTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {holdings.map((holding, index) => {
+          {holdings.map((holding) => {
             const isProfit = (holding.total_return_pln ?? 0) >= 0;
             const isDayPositive = (holding.day_change_percent ?? 0) >= 0;
             const isExpanded = expandedRow === holding.ticker;
@@ -140,12 +139,7 @@ export function AssetTable({
                 >
                   {/* Asset */}
                   <TableCell className="font-medium">
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      className="flex items-center gap-3"
-                    >
+                    <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-linear-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center border border-emerald-500/20">
                         <span className="font-mono font-bold text-emerald-400 text-xs">
                           {holding.ticker.slice(0, 3)}
@@ -163,7 +157,7 @@ export function AssetTable({
                       >
                         {holding.asset_type}
                       </Badge>
-                    </motion.div>
+                    </div>
                   </TableCell>
 
                   {/* Quantity */}
@@ -275,17 +269,10 @@ export function AssetTable({
                 </TableRow>
 
                 {/* Expanded Row - Transaction History */}
-                <AnimatePresence>
-                  {isExpanded && (
-                    <TableRow className="border-white/5">
-                      <TableCell colSpan={8} className="p-0 bg-black/30">
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="px-6 py-4"
-                        >
+                {isExpanded && (
+                  <TableRow className="border-white/5">
+                    <TableCell colSpan={8} className="p-0 bg-black/30">
+                      <div className="px-6 py-4">
                           <h4 className="text-sm font-medium text-white/60 mb-3">
                             Transaction History for {holding.ticker}
                           </h4>
@@ -360,11 +347,10 @@ export function AssetTable({
                               </div>
                             ))}
                           </div>
-                        </motion.div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </AnimatePresence>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
               </Fragment>
             );
           })}

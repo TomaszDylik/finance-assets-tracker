@@ -27,9 +27,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, TrendingUp, TrendingDown, Save, AlertCircle } from 'lucide-react';
+import { Loader2, TrendingUp, TrendingDown, Save } from 'lucide-react';
 import { CURRENCIES, VALIDATION } from '@/lib/constants';
-import type { Transaction, AssetType, Currency } from '@/types';
+import type { Transaction, Currency } from '@/types';
 
 // ===========================================
 // FORM VALIDATION SCHEMA

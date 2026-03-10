@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   ResponsiveContainer,
@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, Calendar, RefreshCw, Loader2 } from 'lucide-react';
+import { TrendingUp, Calendar, RefreshCw, Loader2 } from 'lucide-react';
 import { usePortfolioHistory } from '@/hooks/use-portfolio-history';
 import { useBenchmarkData } from '@/hooks/use-benchmark-data';
 import { getMultipleHistoricalPrices } from '@/lib/yahoo';
@@ -139,7 +139,6 @@ export function PortfolioHistoryChart({
   const [timeRange, setTimeRange] = useState<TimeRange>('1M');
   const [showBenchmark, setShowBenchmark] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastTransactionsLength, setLastTransactionsLength] = useState(transactions.length);
 
   const fetchPrices = useCallback(async (
     tickers: string[],
@@ -160,16 +159,6 @@ export function PortfolioHistoryChart({
     refresh: refreshBenchmark,
     clearCache: clearBenchmarkCache,
   } = useBenchmarkData(transactions, showBenchmark);
-
-  useEffect(() => {
-    if (transactions.length !== lastTransactionsLength) {
-      clearCache();
-      clearBenchmarkCache();
-      refresh();
-      if (showBenchmark) refreshBenchmark();
-      setLastTransactionsLength(transactions.length);
-    }
-  }, [transactions.length, lastTransactionsLength, clearCache, clearBenchmarkCache, refresh, refreshBenchmark, showBenchmark]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

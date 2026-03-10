@@ -5,7 +5,7 @@
 // ===========================================
 // Switches between Table (Desktop) and Card (Mobile) views
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { LayoutGrid, List, Search, Filter, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -44,7 +44,7 @@ export function AssetList({ holdings, isLoading, onDelete, onEdit, onDeleteTrans
   const actualViewMode = viewMode === 'auto' ? (isMobile ? 'grid' : 'table') : viewMode;
 
   // Filter holdings
-  const filteredHoldings = holdings.filter((holding) => {
+  const filteredHoldings = useMemo(() => holdings.filter((holding) => {
     const matchesSearch =
       searchQuery === '' ||
       holding.ticker.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -53,10 +53,10 @@ export function AssetList({ holdings, isLoading, onDelete, onEdit, onDeleteTrans
     const matchesType = filterType === 'ALL' || holding.asset_type === filterType;
 
     return matchesSearch && matchesType;
-  });
+  }), [filterType, holdings, searchQuery]);
 
   // Sort holdings
-  const sortedHoldings = [...filteredHoldings].sort((a, b) => {
+  const sortedHoldings = useMemo(() => [...filteredHoldings].sort((a, b) => {
     let comparison = 0;
 
     switch (sortColumn) {
@@ -80,7 +80,7 @@ export function AssetList({ holdings, isLoading, onDelete, onEdit, onDeleteTrans
     }
 
     return sortDirection === 'asc' ? comparison : -comparison;
-  });
+  }), [filteredHoldings, sortColumn, sortDirection]);
 
   // Handle sort
   const handleSort = (column: string) => {
@@ -201,13 +201,12 @@ export function AssetList({ holdings, isLoading, onDelete, onEdit, onDeleteTrans
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedHoldings.map((holding, index) => (
+          {sortedHoldings.map((holding) => (
             <AssetCard
               key={holding.ticker}
               holding={holding}
               onDelete={onDelete}
               onEdit={onEdit}
-              index={index}
             />
           ))}
         </div>
