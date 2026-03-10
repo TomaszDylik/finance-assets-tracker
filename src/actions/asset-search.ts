@@ -55,6 +55,8 @@ async function searchByKeyword(query: string): Promise<AssetSearchResult[]> {
     const results = await (yahooFinance as any).search(query, {
       quotesCount: 10,
       newsCount: 0,
+    }, {
+      validateResult: false,
     });
 
     if (!results?.quotes || !Array.isArray(results.quotes)) return [];
@@ -89,7 +91,12 @@ async function searchByISIN(isin: string): Promise<AssetSearchResult[]> {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const results = await (yahooFinance as any).search(isin, { quotesCount: 5, newsCount: 0 });
+    const results = await (yahooFinance as any).search(isin, {
+      quotesCount: 5,
+      newsCount: 0,
+    }, {
+      validateResult: false,
+    });
 
     if (results?.quotes?.length > 0) {
       return results.quotes
